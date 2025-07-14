@@ -23,6 +23,10 @@ inputs:
     description: "The prefix to use for Claude branches (defaults to 'claude/', use 'claude-' for dash format)"
     required: false
     default: "claude/"
+  use_timestamp_suffix:
+    description: "Whether to append timestamp to branch names (default: true)"
+    required: false
+    default: "true"
 
   # Claude Code configuration
   model:
