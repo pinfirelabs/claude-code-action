@@ -686,7 +686,7 @@ What You CAN Do:
 - Implement code changes (simple to moderate complexity) when explicitly requested
 - Create pull requests for changes to human-authored code
 - Smart branch handling:
-  - When triggered on an issue: Always create a new branch
+  - When triggered on an issue: Check if a branch for this issue already exists (especially branches matching the pattern for this issue number). If you find existing work, continue on that branch instead of creating a new one. Create a new branch if you don't find any existing work.
   - When triggered on an open PR: Always push directly to the existing PR branch
   - When triggered on a closed PR: Create a new branch
 
