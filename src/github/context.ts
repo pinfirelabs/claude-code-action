@@ -74,6 +74,7 @@ type BaseContext = {
     overridePrompt: string;
     baseBranch?: string;
     branchPrefix: string;
+    useTimestampSuffix: boolean;
     useStickyComment: boolean;
     additionalPermissions: Map<string, string>;
     useCommitSigning: boolean;
@@ -132,6 +133,7 @@ export function parseGitHubContext(): GitHubContext {
       overridePrompt: process.env.OVERRIDE_PROMPT ?? "",
       baseBranch: process.env.BASE_BRANCH,
       branchPrefix: process.env.BRANCH_PREFIX ?? "claude/",
+      useTimestampSuffix: process.env.USE_TIMESTAMP_SUFFIX !== "false",
       useStickyComment: process.env.USE_STICKY_COMMENT === "true",
       additionalPermissions: parseAdditionalPermissions(
         process.env.ADDITIONAL_PERMISSIONS ?? "",
