@@ -437,7 +437,7 @@ function getCommitInstructions(
       return `
       - Use git commands via the Bash tool to commit and push your changes:
         - Stage files: Bash(git add <files>)
-        - Commit with a descriptive message: Bash(git commit -m "<message>")
+        - Commit with a descriptive message that summarizes all changes (this will be visible in PRs): Bash(git commit -m "<message>")
         ${
           coAuthorLine
             ? `- When committing and the trigger user is not "Unknown", include a Co-authored-by trailer:
@@ -451,7 +451,7 @@ function getCommitInstructions(
       - You are already on the correct branch (${eventData.claudeBranch || "the PR branch"}). Do not create a new branch.
       - Use git commands via the Bash tool to commit and push your changes:
         - Stage files: Bash(git add <files>)
-        - Commit with a descriptive message: Bash(git commit -m "<message>")
+        - Commit with a descriptive message that summarizes all changes (this will be visible in PRs): Bash(git commit -m "<message>")
         ${
           coAuthorLine
             ? `- When committing and the trigger user is not "Unknown", include a Co-authored-by trailer:
@@ -702,9 +702,12 @@ ${context.directPrompt ? `   - CRITICAL: Direct user instructions were provided 
         - The target-branch should be '${eventData.baseBranch}'.
         - The branch-name is the current branch: ${eventData.claudeBranch}
         - The body should include:
-          - A clear description of the changes
-          - Reference to the original ${eventData.isPR ? "PR" : "issue"}
-          - The signature: "Generated with [Claude Code](https://claude.ai/code)"
+          - A summary of what was implemented/fixed
+          - Bullet points listing the key changes made (e.g., "- Fixed X\n- Added Y\n- Improved Z")
+          - Any important technical details or decisions
+          - Reference to the original ${eventData.isPR ? "PR" : "issue"} (e.g., "Fixes #123" or "Addresses issue #123")
+          - The signature: "\n\n🤖 Generated with [Claude Code](https://claude.ai/code)"
+        - Make the PR description comprehensive enough that reviewers understand what changed without reading all the code
         - Just include the markdown link with text "Create a PR" - do not add explanatory text before it like "You can create a PR using this link"`
           : ""
       }
