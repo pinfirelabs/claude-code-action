@@ -26,7 +26,7 @@ export async function setupBranch(
 ): Promise<BranchInfo> {
   const { owner, repo } = context.repository;
   const entityNumber = context.entityNumber;
-  const { baseBranch, branchPrefix } = context.inputs;
+  const { baseBranch, baseBranchPrompt, branchPrefix } = context.inputs;
   const isPR = context.isPR;
 
   if (isPR) {
@@ -69,19 +69,37 @@ export async function setupBranch(
     }
   }
 
-  // Determine source branch - use baseBranch if provided, otherwise fetch default
+  // Determine source branch based on the logic:
+  // 1. If base_branch is provided, use it
+  // 2. If base_branch is null and base_branch_prompt is provided, use AI to determine
+  // 3. Otherwise, use repository default branch
   let sourceBranch: string;
 
   if (baseBranch) {
     // Use provided base branch for source
     sourceBranch = baseBranch;
-  } else {
-    // No base branch provided, fetch the default branch to use as source
+    console.log(`Using provided base branch: ${baseBranch}`);
+  } else if (baseBranchPrompt) {
+    // Use AI to determine the base branch
+    console.log(`Using AI prompt to determine base branch: ${baseBranchPrompt}`);
+    // For now, this is a placeholder - actual AI implementation would go here
+    // This would need to call an AI service to analyze the prompt and determine the branch
+    console.log("AI branch determination not yet implemented, falling back to default branch");
+    
+    // Fallback to default branch
     const repoResponse = await octokits.rest.repos.get({
       owner,
       repo,
     });
     sourceBranch = repoResponse.data.default_branch;
+  } else {
+    // No base branch or prompt provided, fetch the default branch to use as source
+    const repoResponse = await octokits.rest.repos.get({
+      owner,
+      repo,
+    });
+    sourceBranch = repoResponse.data.default_branch;
+    console.log(`Using repository default branch: ${sourceBranch}`);
   }
 
   // Generate branch name for either an issue or closed/merged PR
