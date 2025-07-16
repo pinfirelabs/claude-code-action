@@ -39,6 +39,7 @@ export type ParsedGitHubContext = {
     directPrompt: string;
     overridePrompt: string;
     baseBranch?: string;
+    baseBranchPrompt?: string;
     branchPrefix: string;
     useTimestampSuffix: boolean;
     useStickyComment: boolean;
@@ -76,6 +77,7 @@ export function parseGitHubContext(): ParsedGitHubContext {
       directPrompt: process.env.DIRECT_PROMPT ?? "",
       overridePrompt: process.env.OVERRIDE_PROMPT ?? "",
       baseBranch: process.env.BASE_BRANCH,
+      baseBranchPrompt: process.env.BASE_BRANCH_PROMPT,
       branchPrefix: process.env.BRANCH_PREFIX ?? "claude/",
       useTimestampSuffix: process.env.USE_TIMESTAMP_SUFFIX !== "false",
       useStickyComment: process.env.USE_STICKY_COMMENT === "true",
