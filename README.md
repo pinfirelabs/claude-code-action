@@ -167,6 +167,7 @@ jobs:
 
 ## Inputs
 
+<<<<<<< HEAD
 | Input                          | Description                                                                                                            | Required | Default   |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | -------- | --------- |
 | `mode`                         | Execution mode: 'tag' (default - triggered by mentions/assignments), 'agent' (for automation with no trigger checking) | No       | `tag`     |
@@ -198,6 +199,66 @@ jobs:
 | `additional_permissions`       | Additional permissions to enable. Currently supports 'actions: read' for viewing workflow results                      | No       | ""        |
 | `experimental_allowed_domains` | Restrict network access to these domains only (newline-separated).                                                     | No       | ""        |
 | `use_commit_signing`           | Enable commit signing using GitHub's commit signature verification. When false, Claude uses standard git commands      | No       | `false`   |
+||||||| parent of ccd2f60 (feat: add create_pull_request setting for automatic PR creation)
+| Input                     | Description                                                                                                          | Required | Default   |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------- | --------- |
+| `anthropic_api_key`       | Anthropic API key (required for direct API, not needed for Bedrock/Vertex)                                           | No\*     | -         |
+| `claude_code_oauth_token` | Claude Code OAuth token (alternative to anthropic_api_key)                                                           | No\*     | -         |
+| `direct_prompt`           | Direct prompt for Claude to execute automatically without needing a trigger (for automated workflows)                | No       | -         |
+| `base_branch`             | The base branch to use for creating new branches (e.g., 'main', 'develop')                                           | No       | -         |
+| `base_branch_prompt`      | Custom AI prompt to analyze repository context and determine the appropriate base branch dynamically (only used when `base_branch` is not specified) | No       | -         |
+| `max_turns`               | Maximum number of conversation turns Claude can take (limits back-and-forth exchanges)                               | No       | -         |
+| `timeout_minutes`         | Timeout in minutes for execution                                                                                     | No       | `30`      |
+| `use_sticky_comment`      | Use just one comment to deliver PR comments (only applies for pull_request event workflows)                          | No       | `false`   |
+| `github_token`            | GitHub token for Claude to operate with. **Only include this if you're connecting a custom GitHub app of your own!** | No       | -         |
+| `model`                   | Model to use (provider-specific format required for Bedrock/Vertex)                                                  | No       | -         |
+| `fallback_model`          | Enable automatic fallback to specified model when primary model is unavailable                                       | No       | -         |
+| `anthropic_model`         | **DEPRECATED**: Use `model` instead. Kept for backward compatibility.                                                | No       | -         |
+| `use_bedrock`             | Use Amazon Bedrock with OIDC authentication instead of direct Anthropic API                                          | No       | `false`   |
+| `use_vertex`              | Use Google Vertex AI with OIDC authentication instead of direct Anthropic API                                        | No       | `false`   |
+| `allowed_tools`           | Additional tools for Claude to use (the base GitHub tools will always be included)                                   | No       | ""        |
+| `disallowed_tools`        | Tools that Claude should never use                                                                                   | No       | ""        |
+| `custom_instructions`     | Additional custom instructions to include in the prompt for Claude                                                   | No       | ""        |
+| `mcp_config`              | Additional MCP configuration (JSON string) that merges with the built-in GitHub MCP servers                          | No       | ""        |
+| `assignee_trigger`        | The assignee username that triggers the action (e.g. @claude). Only used for issue assignment                        | No       | -         |
+| `label_trigger`           | The label name that triggers the action when applied to an issue (e.g. "claude")                                     | No       | -         |
+| `trigger_phrase`          | The trigger phrase to look for in comments, issue/PR bodies, and issue titles                                        | No       | `@claude` |
+| `branch_prefix`           | The prefix to use for Claude branches (defaults to 'claude/', use 'claude-' for dash format)                         | No       | `claude/` |
+| `claude_env`              | Custom environment variables to pass to Claude Code execution (YAML format)                                          | No       | ""        |
+| `settings`                | Claude Code settings as JSON string or path to settings JSON file                                                    | No       | ""        |
+| `additional_permissions`  | Additional permissions to enable. Currently supports 'actions: read' for viewing workflow results                    | No       | ""        |
+| `use_commit_signing`      | Enable commit signing using GitHub's commit signature verification. When false, Claude uses standard git commands    | No       | `false`   |
+=======
+| Input                     | Description                                                                                                          | Required | Default   |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------- | --------- |
+| `anthropic_api_key`       | Anthropic API key (required for direct API, not needed for Bedrock/Vertex)                                           | No\*     | -         |
+| `claude_code_oauth_token` | Claude Code OAuth token (alternative to anthropic_api_key)                                                           | No\*     | -         |
+| `direct_prompt`           | Direct prompt for Claude to execute automatically without needing a trigger (for automated workflows)                | No       | -         |
+| `base_branch`             | The base branch to use for creating new branches (e.g., 'main', 'develop')                                           | No       | -         |
+| `base_branch_prompt`      | Custom AI prompt to analyze repository context and determine the appropriate base branch dynamically (only used when `base_branch` is not specified) | No       | -         |
+| `create_pull_request`     | Whether to create a pull request automatically after making changes                                                   | No       | `false`   |
+| `max_turns`               | Maximum number of conversation turns Claude can take (limits back-and-forth exchanges)                               | No       | -         |
+| `timeout_minutes`         | Timeout in minutes for execution                                                                                     | No       | `30`      |
+| `use_sticky_comment`      | Use just one comment to deliver PR comments (only applies for pull_request event workflows)                          | No       | `false`   |
+| `github_token`            | GitHub token for Claude to operate with. **Only include this if you're connecting a custom GitHub app of your own!** | No       | -         |
+| `model`                   | Model to use (provider-specific format required for Bedrock/Vertex)                                                  | No       | -         |
+| `fallback_model`          | Enable automatic fallback to specified model when primary model is unavailable                                       | No       | -         |
+| `anthropic_model`         | **DEPRECATED**: Use `model` instead. Kept for backward compatibility.                                                | No       | -         |
+| `use_bedrock`             | Use Amazon Bedrock with OIDC authentication instead of direct Anthropic API                                          | No       | `false`   |
+| `use_vertex`              | Use Google Vertex AI with OIDC authentication instead of direct Anthropic API                                        | No       | `false`   |
+| `allowed_tools`           | Additional tools for Claude to use (the base GitHub tools will always be included)                                   | No       | ""        |
+| `disallowed_tools`        | Tools that Claude should never use                                                                                   | No       | ""        |
+| `custom_instructions`     | Additional custom instructions to include in the prompt for Claude                                                   | No       | ""        |
+| `mcp_config`              | Additional MCP configuration (JSON string) that merges with the built-in GitHub MCP servers                          | No       | ""        |
+| `assignee_trigger`        | The assignee username that triggers the action (e.g. @claude). Only used for issue assignment                        | No       | -         |
+| `label_trigger`           | The label name that triggers the action when applied to an issue (e.g. "claude")                                     | No       | -         |
+| `trigger_phrase`          | The trigger phrase to look for in comments, issue/PR bodies, and issue titles                                        | No       | `@claude` |
+| `branch_prefix`           | The prefix to use for Claude branches (defaults to 'claude/', use 'claude-' for dash format)                         | No       | `claude/` |
+| `claude_env`              | Custom environment variables to pass to Claude Code execution (YAML format)                                          | No       | ""        |
+| `settings`                | Claude Code settings as JSON string or path to settings JSON file                                                    | No       | ""        |
+| `additional_permissions`  | Additional permissions to enable. Currently supports 'actions: read' for viewing workflow results                    | No       | ""        |
+| `use_commit_signing`      | Enable commit signing using GitHub's commit signature verification. When false, Claude uses standard git commands    | No       | `false`   |
+>>>>>>> ccd2f60 (feat: add create_pull_request setting for automatic PR creation)
 
 \*Required when using direct Anthropic API (default and when not using Bedrock or Vertex)
 
@@ -494,6 +555,7 @@ This action is built on top of [`anthropics/claude-code-base-action`](https://gi
   - **Base Branch Selection**: By default uses the repository's default branch as the source, but can be customized:
     - Set `base_branch` to specify a fixed base branch (e.g., 'develop', 'staging')
     - Set `base_branch_prompt` to provide a custom AI prompt that will analyze the repository context and determine the appropriate base branch dynamically (only used when `base_branch` is not specified). Example: "Analyze the repository branches and determine the appropriate base branch for this feature based on the issue description and current branch structure."
+    - Set `create_pull_request: true` to have Claude automatically create a pull request after making changes. The PR will target the base branch determined by the `base_branch` or `base_branch_prompt` settings, or the repository's default branch if neither is specified.
 - **View GitHub Actions Results**: Can access workflow runs, job logs, and test results on the PR where it's tagged when `actions: read` permission is configured (see [Additional Permissions for CI/CD Integration](#additional-permissions-for-cicd-integration))
 
 ### What Claude Cannot Do

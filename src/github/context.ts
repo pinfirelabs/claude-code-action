@@ -45,6 +45,7 @@ export type ParsedGitHubContext = {
     useStickyComment: boolean;
     additionalPermissions: Map<string, string>;
     useCommitSigning: boolean;
+    createPullRequest: boolean;
   };
 };
 
@@ -85,6 +86,7 @@ export function parseGitHubContext(): ParsedGitHubContext {
         process.env.ADDITIONAL_PERMISSIONS ?? "",
       ),
       useCommitSigning: process.env.USE_COMMIT_SIGNING === "true",
+      createPullRequest: process.env.CREATE_PULL_REQUEST === "true",
     },
   };
 
