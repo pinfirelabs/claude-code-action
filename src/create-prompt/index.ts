@@ -37,11 +37,17 @@ export function buildAllowedToolsString(
   customAllowedTools?: string[],
   includeActionsTools: boolean = false,
   useCommitSigning: boolean = false,
+  createPullRequest: boolean = false,
 ): string {
   let baseTools = [...BASE_ALLOWED_TOOLS];
 
   // Always include the comment update tool from the comment server
   baseTools.push("mcp__github_comment__update_claude_comment");
+
+  // Add PR creation tool if enabled
+  if (createPullRequest) {
+    baseTools.push("mcp__github__create_pull_request");
+  }
 
   // Add commit signing tools if enabled
   if (useCommitSigning) {
@@ -464,6 +470,7 @@ export function generatePrompt(
   context: PreparedContext,
   githubData: FetchDataResult,
   useCommitSigning: boolean,
+  createPullRequest: boolean = false,
 ): string {
   const {
     contextData,
@@ -615,7 +622,11 @@ ${context.directPrompt ? `   - DIRECT INSTRUCTION: A direct instruction was prov
       - If you discover related tasks (e.g., updating tests), add them to the todo list.
       - Mark each subtask as completed as you progress.${getCommitInstructions(eventData, githubData, context, useCommitSigning)}
       ${
-        eventData.claudeBranch
+        eventData.claudeBranch && createPullRequest
+          ? `- After pushing your changes, create a pull request targeting '${eventData.baseBranch}'.
+        - Use a descriptive title that summarizes the changes.
+        - Include a clear description of what was changed and why.`
+          : eventData.claudeBranch
           ? `- Provide a URL to create a PR manually in this format:
         [Create a PR](${GITHUB_SERVER_URL}/${context.repository}/compare/${eventData.baseBranch}...<branch-name>?quick_pull=1)
         - IMPORTANT: Use THREE dots (...) between branch names, not two (..)
@@ -642,7 +653,7 @@ ${context.directPrompt ? `   - DIRECT INSTRUCTION: A direct instruction was prov
    - When all todos are completed, remove the spinner and add a brief summary of what was accomplished, and what was not done.
    - Note: If you see previous Claude comments with headers like "**Claude finished @user's task**" followed by "---", do not include this in your comment. The system adds this automatically.
    - If you changed any files locally, you must update them in the remote branch via ${useCommitSigning ? "mcp__github_file_ops__commit_files" : "git commands (add, commit, push)"} before saying that you're done.
-   ${eventData.claudeBranch ? `- If you created anything in your branch, your comment must include the PR URL with prefilled title and body mentioned above.` : ""}
+   ${eventData.claudeBranch && createPullRequest ? `- After pushing all changes, create a pull request from your branch to '${eventData.baseBranch}'.` : eventData.claudeBranch ? `- If you created anything in your branch, your comment must include the PR URL with prefilled title and body mentioned above.` : ""}
 
 Important Notes:
 - All communication must happen through GitHub PR comments.
@@ -679,7 +690,7 @@ What You CAN Do:
 - Answer questions about code and provide explanations
 - Perform code reviews and provide detailed feedback (without implementing unless asked)
 - Implement code changes (simple to moderate complexity) when explicitly requested
-- Create pull requests for changes to human-authored code
+- ${createPullRequest ? 'Create pull requests automatically after implementing changes' : 'Provide links to create pull requests manually'}
 - Smart branch handling:
   - When triggered on an issue: Check if a branch for this issue already exists (especially branches matching the pattern for this issue number). If you find existing work, continue on that branch instead of creating a new one. Create a new branch if you don't find any existing work.
   - When triggered on an open PR: Always push directly to the existing PR branch
@@ -740,6 +751,7 @@ export async function createPrompt(
       preparedContext,
       githubData,
       context.inputs.useCommitSigning,
+      context.inputs.createPullRequest,
     );
 
     // Log the final prompt to console
@@ -761,6 +773,7 @@ export async function createPrompt(
       context.inputs.allowedTools,
       hasActionsReadPermission,
       context.inputs.useCommitSigning,
+      context.inputs.createPullRequest,
     );
     const allDisallowedTools = buildDisallowedToolsString(
       context.inputs.disallowedTools,

@@ -172,6 +172,7 @@ jobs:
 | `direct_prompt`           | Direct prompt for Claude to execute automatically without needing a trigger (for automated workflows)                | No       | -         |
 | `base_branch`             | The base branch to use for creating new branches (e.g., 'main', 'develop')                                           | No       | -         |
 | `base_branch_prompt`      | Custom AI prompt to analyze repository context and determine the appropriate base branch dynamically (only used when `base_branch` is not specified) | No       | -         |
+| `create_pull_request`     | Whether to create a pull request automatically after making changes                                                   | No       | `false`   |
 | `max_turns`               | Maximum number of conversation turns Claude can take (limits back-and-forth exchanges)                               | No       | -         |
 | `timeout_minutes`         | Timeout in minutes for execution                                                                                     | No       | `30`      |
 | `use_sticky_comment`      | Use just one comment to deliver PR comments (only applies for pull_request event workflows)                          | No       | `false`   |
@@ -421,6 +422,7 @@ This action is built on top of [`anthropics/claude-code-base-action`](https://gi
   - **Base Branch Selection**: By default uses the repository's default branch as the source, but can be customized:
     - Set `base_branch` to specify a fixed base branch (e.g., 'develop', 'staging')
     - Set `base_branch_prompt` to provide a custom AI prompt that will analyze the repository context and determine the appropriate base branch dynamically (only used when `base_branch` is not specified). Example: "Analyze the repository branches and determine the appropriate base branch for this feature based on the issue description and current branch structure."
+    - Set `create_pull_request: true` to have Claude automatically create a pull request after making changes. The PR will target the base branch determined by the `base_branch` or `base_branch_prompt` settings, or the repository's default branch if neither is specified.
 - **View GitHub Actions Results**: Can access workflow runs, job logs, and test results on the PR where it's tagged when `actions: read` permission is configured (see [Additional Permissions for CI/CD Integration](#additional-permissions-for-cicd-integration))
 
 ### What Claude Cannot Do

@@ -30,6 +30,10 @@ inputs:
     description: "Whether to append timestamp to branch names (default: true)"
     required: false
     default: "true"
+  create_pull_request:
+    description: "Whether to create a pull request after making changes (default: false)"
+    required: false
+    default: "false"
 
   # Claude Code configuration
   model:
@@ -151,6 +155,7 @@ runs:
         GITHUB_RUN_ID: ${{ github.run_id }}
         USE_STICKY_COMMENT: ${{ inputs.use_sticky_comment }}
         USE_TIMESTAMP_SUFFIX: ${{ inputs.use_timestamp_suffix }}
+        CREATE_PULL_REQUEST: ${{ inputs.create_pull_request }}
         ACTIONS_TOKEN: ${{ github.token }}
         ADDITIONAL_PERMISSIONS: ${{ inputs.additional_permissions }}
         USE_COMMIT_SIGNING: ${{ inputs.use_commit_signing }}
