@@ -87,16 +87,31 @@ export async function setupBranch(
   // Generate branch name for either an issue or closed/merged PR
   const entityType = isPR ? "pr" : "issue";
 
-  // Create Kubernetes-compatible timestamp: lowercase, hyphens only, shorter format
-  const now = new Date();
-  const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+  let branchName: string;
+  
+  console.log(`🔍 Branch creation debug:
+    - useTimestampSuffix: ${context.inputs.useTimestampSuffix}
+    - branchPrefix: ${branchPrefix}
+    - entityType: ${entityType}
+    - entityNumber: ${entityNumber}`);
+  
+  if (context.inputs.useTimestampSuffix) {
+    // Create Kubernetes-compatible timestamp: lowercase, hyphens only, shorter format
+    const now = new Date();
+    const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+    branchName = `${branchPrefix}${entityType}-${entityNumber}-${timestamp}`;
+    console.log(`🔍 Creating branch WITH timestamp: ${branchName}`);
+  } else {
+    // Simple branch name without timestamp
+    branchName = `${branchPrefix}${entityType}-${entityNumber}`;
+    console.log(`🔍 Creating branch WITHOUT timestamp: ${branchName}`);
+  }
 
   // Ensure branch name is Kubernetes-compatible:
   // - Lowercase only
   // - Alphanumeric with hyphens
   // - No underscores
   // - Max 50 chars (to allow for prefixes)
-  const branchName = `${branchPrefix}${entityType}-${entityNumber}-${timestamp}`;
   const newBranch = branchName.toLowerCase().substring(0, 50);
 
   try {

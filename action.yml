@@ -23,6 +23,10 @@ inputs:
     description: "The prefix to use for Claude branches (defaults to 'claude/', use 'claude-' for dash format)"
     required: false
     default: "claude/"
+  use_timestamp_suffix:
+    description: "Whether to append timestamp to branch names (default: true)"
+    required: false
+    default: "true"
 
   # Claude Code configuration
   model:
@@ -142,6 +146,7 @@ runs:
         OVERRIDE_GITHUB_TOKEN: ${{ inputs.github_token }}
         GITHUB_RUN_ID: ${{ github.run_id }}
         USE_STICKY_COMMENT: ${{ inputs.use_sticky_comment }}
+        USE_TIMESTAMP_SUFFIX: ${{ inputs.use_timestamp_suffix }}
         ACTIONS_TOKEN: ${{ github.token }}
         ADDITIONAL_PERMISSIONS: ${{ inputs.additional_permissions }}
         USE_COMMIT_SIGNING: ${{ inputs.use_commit_signing }}

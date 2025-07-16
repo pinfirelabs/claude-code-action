@@ -434,7 +434,7 @@ function getCommitInstructions(
       return `
       - Use git commands via the Bash tool to commit and push your changes:
         - Stage files: Bash(git add <files>)
-        - Commit with a descriptive message: Bash(git commit -m "<message>")
+        - Commit with a descriptive message that summarizes all changes (this will be visible in PRs): Bash(git commit -m "<message>")
         ${
           coAuthorLine
             ? `- When committing and the trigger user is not "Unknown", include a Co-authored-by trailer:
@@ -448,7 +448,7 @@ function getCommitInstructions(
       - You are already on the correct branch (${eventData.claudeBranch || "the PR branch"}). Do not create a new branch.
       - Use git commands via the Bash tool to commit and push your changes:
         - Stage files: Bash(git add <files>)
-        - Commit with a descriptive message: Bash(git commit -m "<message>")
+        - Commit with a descriptive message that summarizes all changes (this will be visible in PRs): Bash(git commit -m "<message>")
         ${
           coAuthorLine
             ? `- When committing and the trigger user is not "Unknown", include a Co-authored-by trailer:
@@ -617,18 +617,13 @@ ${context.directPrompt ? `   - DIRECT INSTRUCTION: A direct instruction was prov
       ${
         eventData.claudeBranch
           ? `- Provide a URL to create a PR manually in this format:
-        [Create a PR](${GITHUB_SERVER_URL}/${context.repository}/compare/${eventData.baseBranch}...<branch-name>?quick_pull=1&title=<url-encoded-title>&body=<url-encoded-body>)
+        [Create a PR](${GITHUB_SERVER_URL}/${context.repository}/compare/${eventData.baseBranch}...<branch-name>?quick_pull=1)
         - IMPORTANT: Use THREE dots (...) between branch names, not two (..)
           Example: ${GITHUB_SERVER_URL}/${context.repository}/compare/main...feature-branch (correct)
           NOT: ${GITHUB_SERVER_URL}/${context.repository}/compare/main..feature-branch (incorrect)
-        - IMPORTANT: Ensure all URL parameters are properly encoded - spaces should be encoded as %20, not left as spaces
-          Example: Instead of "fix: update welcome message", use "fix%3A%20update%20welcome%20message"
         - The target-branch should be '${eventData.baseBranch}'.
         - The branch-name is the current branch: ${eventData.claudeBranch}
-        - The body should include:
-          - A clear description of the changes
-          - Reference to the original ${eventData.isPR ? "PR" : "issue"}
-          - The signature: "Generated with [Claude Code](https://claude.ai/code)"
+        - DO NOT include title or body parameters in the URL - GitHub will use your latest commit message
         - Just include the markdown link with text "Create a PR" - do not add explanatory text before it like "You can create a PR using this link"`
           : ""
       }
@@ -686,7 +681,7 @@ What You CAN Do:
 - Implement code changes (simple to moderate complexity) when explicitly requested
 - Create pull requests for changes to human-authored code
 - Smart branch handling:
-  - When triggered on an issue: Always create a new branch
+  - When triggered on an issue: Check if a branch for this issue already exists (especially branches matching the pattern for this issue number). If you find existing work, continue on that branch instead of creating a new one. Create a new branch if you don't find any existing work.
   - When triggered on an open PR: Always push directly to the existing PR branch
   - When triggered on a closed PR: Create a new branch
 
