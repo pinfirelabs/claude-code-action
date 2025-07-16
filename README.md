@@ -171,7 +171,7 @@ jobs:
 | `claude_code_oauth_token` | Claude Code OAuth token (alternative to anthropic_api_key)                                                           | No\*     | -         |
 | `direct_prompt`           | Direct prompt for Claude to execute automatically without needing a trigger (for automated workflows)                | No       | -         |
 | `base_branch`             | The base branch to use for creating new branches (e.g., 'main', 'develop')                                           | No       | -         |
-| `base_branch_prompt`      | AI prompt to determine the base branch (only used when `base_branch` is not specified)                               | No       | -         |
+| `base_branch_prompt`      | Custom AI prompt to analyze repository context and determine the appropriate base branch dynamically (only used when `base_branch` is not specified) | No       | -         |
 | `max_turns`               | Maximum number of conversation turns Claude can take (limits back-and-forth exchanges)                               | No       | -         |
 | `timeout_minutes`         | Timeout in minutes for execution                                                                                     | No       | `30`      |
 | `use_sticky_comment`      | Use just one comment to deliver PR comments (only applies for pull_request event workflows)                          | No       | `false`   |
@@ -420,7 +420,7 @@ This action is built on top of [`anthropics/claude-code-base-action`](https://gi
   - When triggered on a **closed PR**: Creates a new branch since the original is no longer active
   - **Base Branch Selection**: By default uses the repository's default branch as the source, but can be customized:
     - Set `base_branch` to specify a fixed base branch (e.g., 'develop', 'staging')
-    - Set `base_branch_prompt` to let AI determine the base branch dynamically (only used when `base_branch` is not specified)
+    - Set `base_branch_prompt` to provide a custom AI prompt that will analyze the repository context and determine the appropriate base branch dynamically (only used when `base_branch` is not specified). Example: "Analyze the repository branches and determine the appropriate base branch for this feature based on the issue description and current branch structure."
 - **View GitHub Actions Results**: Can access workflow runs, job logs, and test results on the PR where it's tagged when `actions: read` permission is configured (see [Additional Permissions for CI/CD Integration](#additional-permissions-for-cicd-integration))
 
 ### What Claude Cannot Do
