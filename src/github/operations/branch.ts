@@ -12,6 +12,7 @@ import type { ParsedGitHubContext } from "../context";
 import type { GitHubPullRequest } from "../types";
 import type { Octokits } from "../api/client";
 import type { FetchDataResult } from "../data/fetcher";
+import { determineBranchWithAI } from "../utils/ai-branch-determination";
 
 export type BranchInfo = {
   baseBranch: string;
@@ -82,16 +83,7 @@ export async function setupBranch(
   } else if (baseBranchPrompt) {
     // Use AI to determine the base branch
     console.log(`Using AI prompt to determine base branch: ${baseBranchPrompt}`);
-    // For now, this is a placeholder - actual AI implementation would go here
-    // This would need to call an AI service to analyze the prompt and determine the branch
-    console.log("AI branch determination not yet implemented, falling back to default branch");
-    
-    // Fallback to default branch
-    const repoResponse = await octokits.rest.repos.get({
-      owner,
-      repo,
-    });
-    sourceBranch = repoResponse.data.default_branch;
+    sourceBranch = await determineBranchWithAI(octokits, githubData, context, baseBranchPrompt);
   } else {
     // No base branch or prompt provided, fetch the default branch to use as source
     const repoResponse = await octokits.rest.repos.get({
