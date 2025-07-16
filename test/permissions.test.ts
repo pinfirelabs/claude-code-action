@@ -70,9 +70,11 @@ describe("checkWritePermissions", () => {
       directPrompt: "",
       overridePrompt: "",
       branchPrefix: "claude/",
+      useTimestampSuffix: true,
       useStickyComment: false,
       additionalPermissions: new Map(),
       useCommitSigning: false,
+      createPullRequest: false,
       allowedBots: "",
     },
   });

@@ -34,9 +34,11 @@ describe("prepareMcpConfig", () => {
       directPrompt: "",
       overridePrompt: "",
       branchPrefix: "",
+      useTimestampSuffix: true,
       useStickyComment: false,
       additionalPermissions: new Map(),
       useCommitSigning: false,
+      createPullRequest: false,
       allowedBots: "",
     },
   };

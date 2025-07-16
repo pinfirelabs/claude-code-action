@@ -25,9 +25,11 @@ const defaultInputs = {
   useVertex: false,
   timeoutMinutes: 30,
   branchPrefix: "claude/",
+  useTimestampSuffix: true,
   useStickyComment: false,
   additionalPermissions: new Map<string, string>(),
   useCommitSigning: false,
+  createPullRequest: false,
   allowedBots: "",
 };
 

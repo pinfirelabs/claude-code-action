@@ -80,6 +80,7 @@ type BaseContext = {
     additionalPermissions: Map<string, string>;
     useCommitSigning: boolean;
     allowedBots: string;
+    createPullRequest: boolean;
   };
 };
 
@@ -142,6 +143,7 @@ export function parseGitHubContext(): GitHubContext {
       ),
       useCommitSigning: process.env.USE_COMMIT_SIGNING === "true",
       allowedBots: process.env.ALLOWED_BOTS ?? "",
+      createPullRequest: process.env.CREATE_PULL_REQUEST === "true",
     },
   };
 
