@@ -44,9 +44,10 @@ export function buildAllowedToolsString(
   // Always include the comment update tool from the comment server
   baseTools.push("mcp__github_comment__update_claude_comment");
 
-  // Add PR creation tool if enabled
+  // Add PR creation and update tools if enabled
   if (createPullRequest) {
     baseTools.push("mcp__github__create_pull_request");
+    baseTools.push("mcp__github__update_pull_request");
   }
 
   // Add commit signing tools if enabled
@@ -578,12 +579,21 @@ IMPORTANT CLARIFICATIONS:
 
 Follow these steps:
 
-1. Create a Todo List:
+1. ${eventData.eventName === "issues" && createPullRequest ? `Create Pull Request First:
+   - IMMEDIATELY create a pull request using mcp__github__create_pull_request tool
+   - Set base to '${eventData.baseBranch}' and head to '${eventData.claudeBranch}'
+   - PR title should describe the task from the issue
+   - PR body should include:
+     - "Addresses #${eventData.issueNumber}"
+     - "[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
+     - Space for your todo list and progress updates
+   - Update the issue comment with ONLY: "I've created a pull request to work on this: #[PR_NUMBER]\\n[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
+   - Then STOP working on the issue - all further work will happen when Claude is triggered on the PR` : `Create a Todo List:
    - Start your comment with the job run link: [View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})
    - If working on a branch, include the branch link below it: [View branch](${GITHUB_SERVER_URL}/${context.repository}/tree/<branch-name>)
    - Use your GitHub comment to maintain a detailed task list based on the request.
    - Format todos as a checklist (- [ ] for incomplete, - [x] for complete).
-   - Update the comment using mcp__github_comment__update_claude_comment with each task completion.
+   - Update the comment using mcp__github_comment__update_claude_comment with each task completion.`}
 
 2. Gather Context:
    - Analyze the pre-fetched data provided above.
@@ -621,14 +631,20 @@ ${context.directPrompt ? `   - DIRECT INSTRUCTION: A direct instruction was prov
       - ${eventData.isPR ? `IMPORTANT: Submit your review feedback by updating the Claude comment using mcp__github_comment__update_claude_comment. This will be displayed as your PR review.` : `Remember that this feedback must be posted to the GitHub comment using mcp__github_comment__update_claude_comment.`}
 
    B. For Straightforward Changes:
-      - Use file system tools to make the change locally.
+      ${eventData.eventName === "issues" && createPullRequest 
+        ? `- IMPORTANT: If you haven't created the PR yet, STOP and create it first as described in step 1
+      - After creating the PR, you'll be notified that your work is complete for this issue
+      - All actual implementation work will happen when Claude is triggered on the PR itself`
+        : `- Use file system tools to make the change locally.
       - If you discover related tasks (e.g., updating tests), add them to the todo list.
-      - Mark each subtask as completed as you progress.${getCommitInstructions(eventData, githubData, context, useCommitSigning)}
+      - Mark each subtask as completed as you progress.${getCommitInstructions(eventData, githubData, context, useCommitSigning)}`}
       ${
-        eventData.claudeBranch && createPullRequest
-          ? `- After pushing your changes, create a pull request targeting '${eventData.baseBranch}'.
+        eventData.claudeBranch && createPullRequest && eventData.eventName !== "issues"
+          ? `- After pushing your changes, create a pull request using the mcp__github__create_pull_request tool.
+        - Set the base branch to '${eventData.baseBranch}' and the head branch to '${eventData.claudeBranch}'.
         - Use a descriptive title that summarizes the changes.
-        - Include a clear description of what was changed and why.`
+        - Include a clear description of what was changed and why.
+        - If this is for an issue, reference it in the PR body (e.g., "Fixes #${eventData.issueNumber || 'ISSUE_NUMBER'}").`
           : eventData.claudeBranch
           ? `- Provide a URL to create a PR manually in this format:
         [Create a PR](${GITHUB_SERVER_URL}/${context.repository}/compare/${eventData.baseBranch}...<branch-name>?quick_pull=1)
@@ -643,25 +659,53 @@ ${context.directPrompt ? `   - DIRECT INSTRUCTION: A direct instruction was prov
       }
 
    C. For Complex Changes:
-      - Break down the implementation into subtasks in your comment checklist.
+      ${eventData.eventName === "issues" && createPullRequest 
+        ? `- IMPORTANT: If you haven't created the PR yet, STOP and create it first as described in step 1
+      - After creating the PR, you'll be notified that your work is complete for this issue
+      - All actual implementation work will happen when Claude is triggered on the PR itself`
+        : `- Break down the implementation into subtasks in your comment checklist.
       - Add new todos for any dependencies or related tasks you identify.
       - Remove unnecessary todos if requirements change.
       - Explain your reasoning for each decision.
       - Mark each subtask as completed as you progress.
       - Follow the same pushing strategy as for straightforward changes (see section B above).
-      - Or explain why it's too complex: mark todo as completed in checklist with explanation.
+      - Or explain why it's too complex: mark todo as completed in checklist with explanation.`}
 
 5. Final Update:
-   - Always update the GitHub comment to reflect the current todo state.
+   ${eventData.eventName === "issues" && createPullRequest 
+     ? `- Your final update on the issue should be minimal - just the PR link and job run link
+   - All detailed progress and results should be in the PR comment`
+     : eventData.isPR && createPullRequest
+     ? `- Update the PR description one final time with completed status
+   - Post a comment (not update existing) using mcp__github_comment__update_claude_comment with:
+     - Link to workflow artifacts: "[View transcript in artifacts](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
+     - Summary of what was accomplished
+     - Any remaining tasks or notes for future sessions`
+     : `- Always update the GitHub comment to reflect the current todo state.
    - When all todos are completed, remove the spinner and add a brief summary of what was accomplished, and what was not done.
    - Note: If you see previous Claude comments with headers like "**Claude finished @user's task**" followed by "---", do not include this in your comment. The system adds this automatically.
    - If you changed any files locally, you must update them in the remote branch via ${useCommitSigning ? "mcp__github_file_ops__commit_files" : "git commands (add, commit, push)"} before saying that you're done.
-   ${eventData.claudeBranch && createPullRequest ? `- After pushing all changes, create a pull request from your branch to '${eventData.baseBranch}'.` : eventData.claudeBranch ? `- If you created anything in your branch, your comment must include the PR URL with prefilled title and body mentioned above.` : ""}
+   ${eventData.claudeBranch && createPullRequest && eventData.eventName !== "issues" ? `- After pushing all changes, use mcp__github__create_pull_request to create a PR from '${eventData.claudeBranch}' to '${eventData.baseBranch}'.` : eventData.claudeBranch ? `- If you created anything in your branch, your comment must include the PR URL with prefilled title and body mentioned above.` : ""}`}
 
 Important Notes:
-- All communication must happen through GitHub PR comments.
+${eventData.isPR && createPullRequest ? `- PR Workflow for First Run:
+  - Update the PR description (not comments) with your progress and todo list
+  - When your work is complete, add your first comment containing:
+    - Link to the workflow run with transcript: "[View transcript in artifacts](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
+    - Note: "The transcript is saved as 'claude-transcript-${runId}-1' in the workflow artifacts"
+    - Summary of what was accomplished
+- PR Workflow for Subsequent Runs (triggered by new @claude comments):
+  - First, check if previous PR comments contain transcript artifact links
+  - Look for patterns like "claude-transcript-XXXXX" in comments
+  - Download and analyze previous transcripts to understand context
+  - Continue from where the previous session left off
+  - Update the PR description with cumulative progress
+  - Add a new comment with:
+    - Summary of changes from the previous version
+    - Link to the new transcript artifact
+    - What was accomplished in this session` : `- All communication must happen through GitHub PR comments.
 - Never create new comments. Only update the existing comment using mcp__github_comment__update_claude_comment.
-- This includes ALL responses: code reviews, answers to questions, progress updates, and final results.${eventData.isPR ? `\n- PR CRITICAL: After reading files and forming your response, you MUST post it by calling mcp__github_comment__update_claude_comment. Do NOT just respond with a normal response, the user will not see it.` : ""}
+- This includes ALL responses: code reviews, answers to questions, progress updates, and final results.${eventData.isPR ? `\n- PR CRITICAL: After reading files and forming your response, you MUST post it by calling mcp__github_comment__update_claude_comment. Do NOT just respond with a normal response, the user will not see it.` : ""}`}
 - You communicate exclusively by editing your single comment - not through any other means.
 - Use this spinner HTML when work is in progress: <img src="https://github.com/user-attachments/assets/5ac382c7-e004-429b-8e35-7feb3e8f9c6f" width="14px" height="14px" style="vertical-align: middle; margin-left: 4px;" />
 ${eventData.isPR && !eventData.claudeBranch ? `- Always push to the existing branch when triggered on a PR.` : `- IMPORTANT: You are already on the correct branch (${eventData.claudeBranch || "the created branch"}). Never create new branches when triggered on issues or closed/merged PRs.`}

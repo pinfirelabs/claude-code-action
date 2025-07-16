@@ -230,13 +230,24 @@ runs:
         USE_STICKY_COMMENT: ${{ inputs.use_sticky_comment }}
         USE_COMMIT_SIGNING: ${{ inputs.use_commit_signing }}
 
+    - name: Save Claude Transcript
+      if: always() && steps.prepare.outputs.contains_trigger == 'true' && steps.claude-code.outputs.execution_file != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: claude-transcript-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ steps.claude-code.outputs.execution_file }}
+        retention-days: 30
+        if-no-files-found: warn
+
     - name: Display Claude Code Report
       if: steps.prepare.outputs.contains_trigger == 'true' && steps.claude-code.outputs.execution_file != ''
       shell: bash
       run: |
-        # Try to format the turns, but if it fails, dump the raw JSON
-        if bun run ${{ github.action_path }}/src/entrypoints/format-turns.ts "${{ steps.claude-code.outputs.execution_file }}" >> $GITHUB_STEP_SUMMARY 2>/dev/null; then
-          echo "Successfully formatted Claude Code report"
+        # Try using claude-stream-parser first, fallback to format-turns.ts, then raw JSON
+        if command -v python3 >/dev/null 2>&1 && curl -sSL https://raw.githubusercontent.com/jcherniak/claude-stream-parser/main/claude-stream-parser | python3 - "${{ steps.claude-code.outputs.execution_file }}" >> $GITHUB_STEP_SUMMARY 2>/dev/null; then
+          echo "Successfully formatted Claude Code report with claude-stream-parser"
+        elif bun run ${{ github.action_path }}/src/entrypoints/format-turns.ts "${{ steps.claude-code.outputs.execution_file }}" >> $GITHUB_STEP_SUMMARY 2>/dev/null; then
+          echo "Successfully formatted Claude Code report with format-turns.ts"
         else
           echo "## Claude Code Report (Raw Output)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
