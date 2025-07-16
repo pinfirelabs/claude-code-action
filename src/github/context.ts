@@ -35,6 +35,7 @@ export type ParsedGitHubContext = {
     customInstructions: string;
     directPrompt: string;
     baseBranch?: string;
+    baseBranchPrompt?: string;
     branchPrefix: string;
     useStickyComment: boolean;
     additionalPermissions: Map<string, string>;
@@ -64,6 +65,7 @@ export function parseGitHubContext(): ParsedGitHubContext {
       customInstructions: process.env.CUSTOM_INSTRUCTIONS ?? "",
       directPrompt: process.env.DIRECT_PROMPT ?? "",
       baseBranch: process.env.BASE_BRANCH,
+      baseBranchPrompt: process.env.BASE_BRANCH_PROMPT,
       branchPrefix: process.env.BRANCH_PREFIX ?? "claude/",
       useStickyComment: process.env.USE_STICKY_COMMENT === "true",
       additionalPermissions: parseAdditionalPermissions(
