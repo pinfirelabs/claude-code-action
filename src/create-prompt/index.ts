@@ -580,13 +580,17 @@ IMPORTANT CLARIFICATIONS:
 Follow these steps:
 
 1. ${((eventData.eventName === "issues") || (eventData.eventName === "issue_comment" && !eventData.isPR)) && createPullRequest ? `Create Pull Request First:
-   - IMMEDIATELY create a pull request using mcp__github__create_pull_request tool
-   - Set base to '${eventData.baseBranch}' and head to '${eventData.claudeBranch}'
-   - PR title should describe the task from the issue
-   - PR body should include:
-     - "Addresses #${eventData.issueNumber}"
-     - "[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
-     - Space for your todo list and progress updates
+   - Create an initial commit to enable PR creation:
+     - Use mcp__github__create_or_update_file to create "WORK_IN_PROGRESS.md" with your analysis and plan
+     - Include the issue description, your understanding of the problem, and planned approach
+     - This meaningful commit allows PR creation and documents your work plan
+   - IMMEDIATELY create a pull request using mcp__github__create_pull_request tool:
+     - Set base to '${eventData.baseBranch}' and head to '${eventData.claudeBranch}'
+     - PR title should describe the task from the issue
+     - PR body should include:
+       - "Addresses #${eventData.issueNumber}"
+       - "[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
+       - Space for your todo list and progress updates
    - Update the issue comment with ONLY: "I've created a pull request to work on this: #[PR_NUMBER]\\n[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
    - Then STOP working on the issue - all further work will happen when Claude is triggered on the PR` : `Create a Todo List:
    - Start your comment with the job run link: [View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})
