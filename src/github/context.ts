@@ -45,6 +45,41 @@ export type ParsedGitHubContext = {
   };
 };
 
+function parseAllowedTools(
+  allowedToolsInput: string,
+  createPullRequest: boolean,
+): string[] {
+  const baseTools = parseMultilineInput(allowedToolsInput);
+  
+  // If create_pull_request is enabled, automatically include GitHub MCP tools
+  if (createPullRequest) {
+    const githubMcpTools = [
+      "mcp__github__create_pull_request",
+      "mcp__github__create_branch", 
+      "mcp__github__create_or_update_file",
+      "mcp__github__push_files",
+      "mcp__github__get_pull_request",
+      "mcp__github__list_pull_requests",
+      "mcp__github__update_pull_request",
+      "mcp__github__merge_pull_request",
+      "mcp__github__get_issue",
+      "mcp__github__update_issue",
+      "mcp__github__add_issue_comment",
+    ];
+    
+    // Add GitHub MCP tools that aren't already in the list
+    const allTools = [...baseTools];
+    for (const tool of githubMcpTools) {
+      if (!allTools.includes(tool)) {
+        allTools.push(tool);
+      }
+    }
+    return allTools;
+  }
+  
+  return baseTools;
+}
+
 export function parseGitHubContext(): ParsedGitHubContext {
   const context = github.context;
 
@@ -62,7 +97,10 @@ export function parseGitHubContext(): ParsedGitHubContext {
       triggerPhrase: process.env.TRIGGER_PHRASE ?? "@claude",
       assigneeTrigger: process.env.ASSIGNEE_TRIGGER ?? "",
       labelTrigger: process.env.LABEL_TRIGGER ?? "",
-      allowedTools: parseMultilineInput(process.env.ALLOWED_TOOLS ?? ""),
+      allowedTools: parseAllowedTools(
+        process.env.ALLOWED_TOOLS ?? "",
+        process.env.CREATE_PULL_REQUEST === "true",
+      ),
       disallowedTools: parseMultilineInput(process.env.DISALLOWED_TOOLS ?? ""),
       customInstructions: process.env.CUSTOM_INSTRUCTIONS ?? "",
       directPrompt: process.env.DIRECT_PROMPT ?? "",

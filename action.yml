@@ -31,7 +31,7 @@ inputs:
     required: false
     default: "true"
   create_pull_request:
-    description: "Whether to create a pull request after making changes (default: false)"
+    description: "Whether to create a pull request after making changes (default: false). When enabled, automatically includes necessary GitHub MCP tools."
     required: false
     default: "false"
 
