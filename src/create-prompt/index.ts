@@ -601,7 +601,7 @@ Follow these steps:
    - Format todos as a checklist (- [ ] for incomplete, - [x] for complete).
    - Update the comment using mcp__github_comment__update_claude_comment with each task completion.`}
 
-2. Gather Context:
+3. Gather Context:
    - Analyze the pre-fetched data provided above.
    - For ISSUE_CREATED: Read the issue body to find the request after the trigger phrase.
    - For ISSUE_ASSIGNED: Read the entire issue body to understand the task.
