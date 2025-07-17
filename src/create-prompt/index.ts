@@ -587,10 +587,9 @@ Follow these steps:
      - Set base to '${eventData.baseBranch}' and head to '${eventData.claudeBranch}'
      - PR title should describe the task from the issue
      - PR body should include "Addresses #${eventData.issueNumber}"
-   - Clean up the temporary commit:
-     - Use Bash to run: git reset HEAD~1 --hard
-     - Use Bash to run: git push --force
-     - This removes the temporary commit and leaves a clean branch
+   - Clean up the temporary file:
+     - Use mcp__github__delete_file to remove "tmp.md" (this creates a clean commit removing the temp file)
+     - DO NOT force push yet - this would close the PR since there would be no changes
    - Update the issue comment with: "I've created a pull request to work on this: #[PR_NUMBER]\\n[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
    - Now proceed with normal workflow - create todo list and work in PR comments
 
