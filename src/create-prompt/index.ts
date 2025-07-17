@@ -579,7 +579,7 @@ IMPORTANT CLARIFICATIONS:
 
 Follow these steps:
 
-1. ${eventData.eventName === "issues" && createPullRequest ? `Create Pull Request First:
+1. ${((eventData.eventName === "issues") || (eventData.eventName === "issue_comment" && !eventData.isPR)) && createPullRequest ? `Create Pull Request First:
    - IMMEDIATELY create a pull request using mcp__github__create_pull_request tool
    - Set base to '${eventData.baseBranch}' and head to '${eventData.claudeBranch}'
    - PR title should describe the task from the issue
@@ -631,7 +631,7 @@ ${context.directPrompt ? `   - DIRECT INSTRUCTION: A direct instruction was prov
       - ${eventData.isPR ? `IMPORTANT: Submit your review feedback by updating the Claude comment using mcp__github_comment__update_claude_comment. This will be displayed as your PR review.` : `Remember that this feedback must be posted to the GitHub comment using mcp__github_comment__update_claude_comment.`}
 
    B. For Straightforward Changes:
-      ${eventData.eventName === "issues" && createPullRequest 
+      ${((eventData.eventName === "issues") || (eventData.eventName === "issue_comment" && !eventData.isPR)) && createPullRequest 
         ? `- IMPORTANT: If you haven't created the PR yet, STOP and create it first as described in step 1
       - After creating the PR, you'll be notified that your work is complete for this issue
       - All actual implementation work will happen when Claude is triggered on the PR itself`
@@ -659,7 +659,7 @@ ${context.directPrompt ? `   - DIRECT INSTRUCTION: A direct instruction was prov
       }
 
    C. For Complex Changes:
-      ${eventData.eventName === "issues" && createPullRequest 
+      ${((eventData.eventName === "issues") || (eventData.eventName === "issue_comment" && !eventData.isPR)) && createPullRequest 
         ? `- IMPORTANT: If you haven't created the PR yet, STOP and create it first as described in step 1
       - After creating the PR, you'll be notified that your work is complete for this issue
       - All actual implementation work will happen when Claude is triggered on the PR itself`
@@ -672,7 +672,7 @@ ${context.directPrompt ? `   - DIRECT INSTRUCTION: A direct instruction was prov
       - Or explain why it's too complex: mark todo as completed in checklist with explanation.`}
 
 5. Final Update:
-   ${eventData.eventName === "issues" && createPullRequest 
+   ${((eventData.eventName === "issues") || (eventData.eventName === "issue_comment" && !eventData.isPR)) && createPullRequest 
      ? `- Your final update on the issue should be minimal - just the PR link and job run link
    - All detailed progress and results should be in the PR comment`
      : eventData.isPR && createPullRequest
