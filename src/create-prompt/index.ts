@@ -580,19 +580,21 @@ IMPORTANT CLARIFICATIONS:
 Follow these steps:
 
 1. ${((eventData.eventName === "issues") || (eventData.eventName === "issue_comment" && !eventData.isPR)) && createPullRequest ? `Create Pull Request First:
-   - Create an initial commit to enable PR creation:
-     - Use mcp__github__create_or_update_file to create "WORK_IN_PROGRESS.md" with your analysis and plan
-     - Include the issue description, your understanding of the problem, and planned approach
-     - This meaningful commit allows PR creation and documents your work plan
-   - IMMEDIATELY create a pull request using mcp__github__create_pull_request tool:
+   - Create a temporary commit to enable PR creation:
+     - Use mcp__github__create_or_update_file to create "tmp.md" with content "temp commit for PR creation"
+     - This provides the commit needed for PR creation
+   - Create a pull request using mcp__github__create_pull_request tool:
      - Set base to '${eventData.baseBranch}' and head to '${eventData.claudeBranch}'
      - PR title should describe the task from the issue
-     - PR body should include:
-       - "Addresses #${eventData.issueNumber}"
-       - "[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
-       - Space for your todo list and progress updates
-   - Update the issue comment with ONLY: "I've created a pull request to work on this: #[PR_NUMBER]\\n[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
-   - Then STOP working on the issue - all further work will happen when Claude is triggered on the PR` : `Create a Todo List:
+     - PR body should include "Addresses #${eventData.issueNumber}"
+   - Clean up the temporary commit:
+     - Use Bash to run: git reset HEAD~1 --hard
+     - Use Bash to run: git push --force
+     - This removes the temporary commit and leaves a clean branch
+   - Update the issue comment with: "I've created a pull request to work on this: #[PR_NUMBER]\\n[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
+   - Now proceed with normal workflow - create todo list and work in PR comments
+
+2. Create a Todo List:
    - Start your comment with the job run link: [View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})
    - If working on a branch, include the branch link below it: [View branch](${GITHUB_SERVER_URL}/${context.repository}/tree/<branch-name>)
    - Use your GitHub comment to maintain a detailed task list based on the request.
