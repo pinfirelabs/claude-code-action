@@ -57,7 +57,6 @@ function parseAllowedTools(
       "mcp__github__create_pull_request",
       "mcp__github__create_branch", 
       "mcp__github__create_or_update_file",
-      "mcp__github__delete_file",
       "mcp__github__push_files",
       "mcp__github__get_pull_request",
       "mcp__github__list_pull_requests",
@@ -66,6 +65,8 @@ function parseAllowedTools(
       "mcp__github__get_issue",
       "mcp__github__update_issue",
       "mcp__github__add_issue_comment",
+      "Bash(git reset * --hard)",
+      "Bash(git push --force)",
     ];
     
     // Add GitHub MCP tools that aren't already in the list

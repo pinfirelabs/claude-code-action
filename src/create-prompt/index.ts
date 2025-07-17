@@ -587,11 +587,11 @@ Follow these steps:
      - Set base to '${eventData.baseBranch}' and head to '${eventData.claudeBranch}'
      - PR title should describe the task from the issue
      - PR body should include "Addresses #${eventData.issueNumber}"
-   - Clean up the temporary file:
-     - Use mcp__github__delete_file to remove "tmp.md" (this creates a clean commit removing the temp file)
-     - DO NOT force push yet - this would close the PR since there would be no changes
+   - Reset branch to clean state for actual work:
+     - Use Bash to run: git reset ${eventData.baseBranch} --hard
+     - This removes the temp commit and resets to base branch
    - Update the issue comment with: "I've created a pull request to work on this: #[PR_NUMBER]\\n[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
-   - Now proceed with normal workflow - create todo list and work in PR comments
+   - Now proceed with normal workflow - do actual work and force push at the end
 
 2. Create a Todo List:` : `Create a Todo List:`}
    - Start your comment with the job run link: [View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})
@@ -723,7 +723,7 @@ ${
     : `- Use git commands via the Bash tool for version control (you have access to specific git commands only):
   - Stage files: Bash(git add <files>)
   - Commit changes: Bash(git commit -m "<message>")
-  - Push to remote: Bash(git push origin <branch>) (NEVER force push)
+  - Push to remote: Bash(git push origin <branch>)${((eventData.eventName === "issues") || (eventData.eventName === "issue_comment" && !eventData.isPR)) && createPullRequest ? " or Bash(git push --force) when working in PR-first workflow after actual changes are made" : " (NEVER force push)"}
   - Delete files: Bash(git rm <files>) followed by commit and push
   - Check status: Bash(git status)
   - View diff: Bash(git diff)
