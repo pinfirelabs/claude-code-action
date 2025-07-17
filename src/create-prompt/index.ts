@@ -594,12 +594,12 @@ Follow these steps:
    - Update the issue comment with: "I've created a pull request to work on this: #[PR_NUMBER]\\n[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
    - Now proceed with normal workflow - create todo list and work in PR comments
 
-2. Create a Todo List:
+2. Create a Todo List:` : `Create a Todo List:`}
    - Start your comment with the job run link: [View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})
    - If working on a branch, include the branch link below it: [View branch](${GITHUB_SERVER_URL}/${context.repository}/tree/<branch-name>)
    - Use your GitHub comment to maintain a detailed task list based on the request.
    - Format todos as a checklist (- [ ] for incomplete, - [x] for complete).
-   - Update the comment using mcp__github_comment__update_claude_comment with each task completion.`}
+   - Update the comment using mcp__github_comment__update_claude_comment with each task completion.
 
 3. Gather Context:
    - Analyze the pre-fetched data provided above.
