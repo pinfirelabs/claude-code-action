@@ -579,21 +579,7 @@ IMPORTANT CLARIFICATIONS:
 
 Follow these steps:
 
-1. ${((eventData.eventName === "issues") || (eventData.eventName === "issue_comment" && !eventData.isPR)) && createPullRequest ? `Create Pull Request First:
-   - Create a temporary commit to enable PR creation:
-     - Use mcp__github__create_or_update_file to create "tmp.md" with content "temp commit for PR creation"
-     - This provides the commit needed for PR creation
-   - Create a pull request using mcp__github__create_pull_request tool:
-     - Set base to '${eventData.baseBranch}' and head to '${eventData.claudeBranch}'
-     - PR title should describe the task from the issue
-     - PR body should include "Addresses #${eventData.issueNumber}"
-   - Reset branch to clean state for actual work:
-     - Use Bash to run: git reset ${eventData.baseBranch} --hard
-     - This removes the temp commit and resets to base branch
-   - Update the issue comment with: "I've created a pull request to work on this: #[PR_NUMBER]\\n[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
-   - Now proceed with normal workflow - do actual work and force push at the end
-
-2. Create a Todo List:` : `Create a Todo List:`}
+1. Create a Todo List:
    - Start your comment with the job run link: [View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})
    - If working on a branch, include the branch link below it: [View branch](${GITHUB_SERVER_URL}/${context.repository}/tree/<branch-name>)
    - Use your GitHub comment to maintain a detailed task list based on the request.
@@ -644,12 +630,12 @@ ${context.directPrompt ? `   - DIRECT INSTRUCTION: A direct instruction was prov
       - If you discover related tasks (e.g., updating tests), add them to the todo list.
       - Mark each subtask as completed as you progress.${getCommitInstructions(eventData, githubData, context, useCommitSigning)}`}
       ${
-        eventData.claudeBranch && createPullRequest && eventData.eventName !== "issues"
+        eventData.claudeBranch && createPullRequest
           ? `- After pushing your changes, create a pull request using the mcp__github__create_pull_request tool.
         - Set the base branch to '${eventData.baseBranch}' and the head branch to '${eventData.claudeBranch}'.
         - Use a descriptive title that summarizes the changes.
-        - Include a clear description of what was changed and why.
-        - If this is for an issue, reference it in the PR body (e.g., "Fixes #${eventData.issueNumber || 'ISSUE_NUMBER'}").`
+        - For the PR body: Use the FULL content of your current GitHub comment (excluding the job run link and branch link).
+        - If this is for an issue, reference it in the PR body (e.g., "Addresses #${eventData.issueNumber || 'ISSUE_NUMBER'}").`
           : eventData.claudeBranch
           ? `- Provide a URL to create a PR manually in this format:
         [Create a PR](${GITHUB_SERVER_URL}/${context.repository}/compare/${eventData.baseBranch}...<branch-name>?quick_pull=1)
@@ -664,33 +650,24 @@ ${context.directPrompt ? `   - DIRECT INSTRUCTION: A direct instruction was prov
       }
 
    C. For Complex Changes:
-      ${((eventData.eventName === "issues") || (eventData.eventName === "issue_comment" && !eventData.isPR)) && createPullRequest 
-        ? `- IMPORTANT: If you haven't created the PR yet, STOP and create it first as described in step 1
-      - After creating the PR, you'll be notified that your work is complete for this issue
-      - All actual implementation work will happen when Claude is triggered on the PR itself`
-        : `- Break down the implementation into subtasks in your comment checklist.
+      - Break down the implementation into subtasks in your comment checklist.
       - Add new todos for any dependencies or related tasks you identify.
       - Remove unnecessary todos if requirements change.
       - Explain your reasoning for each decision.
       - Mark each subtask as completed as you progress.
       - Follow the same pushing strategy as for straightforward changes (see section B above).
-      - Or explain why it's too complex: mark todo as completed in checklist with explanation.`}
+      - Or explain why it's too complex: mark todo as completed in checklist with explanation.
 
 5. Final Update:
-   ${((eventData.eventName === "issues") || (eventData.eventName === "issue_comment" && !eventData.isPR)) && createPullRequest 
-     ? `- Your final update on the issue should be minimal - just the PR link and job run link
-   - All detailed progress and results should be in the PR comment`
-     : eventData.isPR && createPullRequest
-     ? `- Update the PR description one final time with completed status
-   - Post a comment (not update existing) using mcp__github_comment__update_claude_comment with:
-     - Link to workflow artifacts: "[View transcript in artifacts](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
-     - Summary of what was accomplished
-     - Any remaining tasks or notes for future sessions`
-     : `- Always update the GitHub comment to reflect the current todo state.
+   - Always update the GitHub comment to reflect the current todo state.
    - When all todos are completed, remove the spinner and add a brief summary of what was accomplished, and what was not done.
    - Note: If you see previous Claude comments with headers like "**Claude finished @user's task**" followed by "---", do not include this in your comment. The system adds this automatically.
    - If you changed any files locally, you must update them in the remote branch via ${useCommitSigning ? "mcp__github_file_ops__commit_files" : "git commands (add, commit, push)"} before saying that you're done.
-   ${eventData.claudeBranch && createPullRequest && eventData.eventName !== "issues" ? `- After pushing all changes, use mcp__github__create_pull_request to create a PR from '${eventData.claudeBranch}' to '${eventData.baseBranch}'.` : eventData.claudeBranch ? `- If you created anything in your branch, your comment must include the PR URL with prefilled title and body mentioned above.` : ""}`}
+   ${eventData.claudeBranch && createPullRequest ? `- After pushing all changes and completing work:
+     - Create a pull request using mcp__github__create_pull_request
+     - Include the FULL content of your current GitHub comment (excluding job/branch links) as the PR body
+     - Update your issue comment to ADD the PR link AT THE TOP: "Pull Request: #[PR_NUMBER]\\n\\n[rest of your existing comment]"
+     - Do NOT include a "Create a PR" link after PR is created` : eventData.claudeBranch ? `- If you created anything in your branch, your comment must include the PR URL with prefilled title and body mentioned above.` : ""}
 
 Important Notes:
 ${eventData.isPR && createPullRequest ? `- PR Workflow for First Run:
@@ -723,7 +700,7 @@ ${
     : `- Use git commands via the Bash tool for version control (you have access to specific git commands only):
   - Stage files: Bash(git add <files>)
   - Commit changes: Bash(git commit -m "<message>")
-  - Push to remote: Bash(git push origin <branch>)${((eventData.eventName === "issues") || (eventData.eventName === "issue_comment" && !eventData.isPR)) && createPullRequest ? " or Bash(git push --force) when working in PR-first workflow after actual changes are made" : " (NEVER force push)"}
+  - Push to remote: Bash(git push origin <branch>) (NEVER force push)
   - Delete files: Bash(git rm <files>) followed by commit and push
   - Check status: Bash(git status)
   - View diff: Bash(git diff)

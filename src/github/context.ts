@@ -65,8 +65,6 @@ function parseAllowedTools(
       "mcp__github__get_issue",
       "mcp__github__update_issue",
       "mcp__github__add_issue_comment",
-      "Bash(git reset * --hard)",
-      "Bash(git push --force)",
     ];
     
     // Add GitHub MCP tools that aren't already in the list
