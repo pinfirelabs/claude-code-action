@@ -193,6 +193,16 @@ runs:
         # Install Claude Code globally
         bun install -g @anthropic-ai/claude-code@1.0.72
 
+        # Install claude-stream-parser for live output formatting
+        echo "Installing claude-stream-parser..."
+        if command -v python3 >/dev/null 2>&1; then
+          curl -sSL https://raw.githubusercontent.com/jcherniak/claude-stream-parser/main/claude-stream-parser -o /usr/local/bin/claude-stream-parser
+          chmod +x /usr/local/bin/claude-stream-parser
+          echo "claude-stream-parser installed"
+        else
+          echo "Warning: Python3 not available, claude-stream-parser will not be used"
+        fi
+
     - name: Setup Network Restrictions
       if: steps.prepare.outputs.contains_trigger == 'true' && inputs.experimental_allowed_domains != ''
       shell: bash
