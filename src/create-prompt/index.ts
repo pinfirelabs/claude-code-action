@@ -724,11 +724,15 @@ ${context.directPrompt ? `   - CRITICAL: Direct user instructions were provided 
       - Mark each subtask as completed as you progress.${getCommitInstructions(eventData, githubData, context, useCommitSigning)}`}
       ${
         eventData.claudeBranch && createPullRequest
-          ? `- After pushing your changes, create a pull request using the mcp__github__create_pull_request tool.
+          ? `- CRITICAL: You MUST push all changes to the remote branch BEFORE attempting to create a pull request:
+        1. First, commit and push ALL your changes: Bash(git push origin ${eventData.claudeBranch})
+        2. Verify the push succeeded by checking the output
+        3. Only AFTER successfully pushing, create a pull request using the mcp__github__create_pull_request tool
         - Set the base branch to '${eventData.baseBranch}' and the head branch to '${eventData.claudeBranch}'.
         - Use a descriptive title that summarizes the changes.
         - For the PR body: Use the FULL content of your current GitHub comment (excluding the job run link and branch link).
-        - If this is for an issue, reference it in the PR body (e.g., "Addresses #${eventData.issueNumber || 'ISSUE_NUMBER'}").`
+        - If this is for an issue, reference it in the PR body (e.g., "Addresses #${eventData.issueNumber || 'ISSUE_NUMBER'}").
+        - REMEMBER: The PR will FAIL if you haven't pushed your changes first!`
           : eventData.claudeBranch
           ? `- Provide a URL to create a PR manually in this format:
         [Create a PR](${GITHUB_SERVER_URL}/${context.repository}/compare/${eventData.baseBranch}...<branch-name>?quick_pull=1)
@@ -756,11 +760,15 @@ ${context.directPrompt ? `   - CRITICAL: Direct user instructions were provided 
    - When all todos are completed, remove the spinner and add a brief summary of what was accomplished, and what was not done.
    - Note: If you see previous Claude comments with headers like "**Claude finished @user's task**" followed by "---", do not include this in your comment. The system adds this automatically.
    - If you changed any files locally, you must update them in the remote branch via ${useCommitSigning ? "mcp__github_file_ops__commit_files" : "git commands (add, commit, push)"} before saying that you're done.
-   ${eventData.claudeBranch && createPullRequest ? `- After pushing all changes and completing work:
-     - Create a pull request using mcp__github__create_pull_request
+   ${eventData.claudeBranch && createPullRequest ? `- CRITICAL PR CREATION SEQUENCE:
+     1. FIRST: Ensure ALL changes are committed: Bash(git add -A && git commit -m "your message")
+     2. SECOND: Push ALL commits to remote: Bash(git push origin ${eventData.claudeBranch})
+     3. THIRD: Verify push succeeded (check for success message in git push output)
+     4. ONLY THEN: Create pull request using mcp__github__create_pull_request
      - Include the FULL content of your current GitHub comment (excluding job/branch links) as the PR body
      - Update your issue comment to ADD the PR link AT THE TOP: "Pull Request: #[PR_NUMBER]\\n\\n[rest of your existing comment]"
-     - Do NOT include a "Create a PR" link after PR is created` : eventData.claudeBranch ? `- If you created anything in your branch, your comment must include the PR URL with prefilled title and body mentioned above.` : ""}
+     - Do NOT include a "Create a PR" link after PR is created
+     - REMEMBER: PR creation will FAIL if branch doesn't exist on remote!` : eventData.claudeBranch ? `- If you created anything in your branch, your comment must include the PR URL with prefilled title and body mentioned above.` : ""}
 
 Important Notes:
 ${eventData.isPR && createPullRequest ? `- PR Workflow for First Run:
@@ -810,7 +818,7 @@ What You CAN Do:
 - Answer questions about code and provide explanations
 - Perform code reviews and provide detailed feedback (without implementing unless asked)
 - Implement code changes (simple to moderate complexity) when explicitly requested
-- ${createPullRequest ? 'Create pull requests automatically after implementing changes' : 'Provide links to create pull requests manually'}
+- ${createPullRequest ? 'Create pull requests automatically after implementing changes (BUT ONLY AFTER pushing all commits to remote!)' : 'Provide links to create pull requests manually'}
 - Smart branch handling:
   - When triggered on an issue: Check if a branch for this issue already exists (especially branches matching the pattern for this issue number). If you find existing work, continue on that branch instead of creating a new one. Create a new branch if you don't find any existing work.
   - When triggered on an open PR: Always push directly to the existing PR branch
