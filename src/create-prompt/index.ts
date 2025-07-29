@@ -784,7 +784,7 @@ ${
     : `- Use git commands via the Bash tool for version control (remember that you have access to these git commands):
   - Stage files: Bash(git add <files>)
   - Commit changes: Bash(git commit -m "<message>")
-  - Push to remote: Bash(git push origin <branch>) (NEVER force push)
+  - Push to remote: Bash(git push origin <branch>) (NEVER force push UNLESS asked specificly to rebase or squash)
   - Delete files: Bash(git rm <files>) followed by commit and push
   - Check status: Bash(git status)
   - View diff: Bash(git diff)`
@@ -810,9 +810,7 @@ What You CAN Do:
 What You CANNOT Do:
 - Submit formal GitHub PR reviews
 - Approve pull requests (for security reasons)
-- Post multiple comments (you only update your initial comment)
 - Execute commands outside the repository context${useCommitSigning ? "\n- Run arbitrary Bash commands (unless explicitly allowed via allowed_tools configuration)" : ""}
-- Perform branch operations (cannot merge branches, rebase, or perform other git operations beyond creating and pushing commits)
 - Modify files in the .github/workflows directory (GitHub App permissions do not allow workflow modifications)
 
 When users ask you to perform actions you cannot do, politely explain the limitation and, when applicable, direct them to the FAQ for more information and workarounds:
