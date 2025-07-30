@@ -718,13 +718,19 @@ ${context.directPrompt ? `   - CRITICAL: Direct user instructions were provided 
         - REMEMBER: The PR will FAIL if you haven't pushed your changes first!`
           : eventData.claudeBranch
           ? `- Provide a URL to create a PR manually in this format:
-        [Create a PR](${GITHUB_SERVER_URL}/${context.repository}/compare/${eventData.baseBranch}...<branch-name>?quick_pull=1)
+		[Create a PR](${GITHUB_SERVER_URL}/${context.repository}/compare/${eventData.baseBranch}...<branch-name>?quick_pull=1&title=<url-encoded-title>&body=<url
+-encoded-body>)
         - IMPORTANT: Use THREE dots (...) between branch names, not two (..)
           Example: ${GITHUB_SERVER_URL}/${context.repository}/compare/main...feature-branch (correct)
           NOT: ${GITHUB_SERVER_URL}/${context.repository}/compare/main..feature-branch (incorrect)
+		- IMPORTANT: Ensure all URL parameters are properly encoded - spaces should be encoded as %20, not left as spaces
+		  Example: Instead of "fix: update welcome message", use "fix%3A%20update%20welcome%20message"
         - The target-branch should be '${eventData.baseBranch}'.
         - The branch-name is the current branch: ${eventData.claudeBranch}
-        - DO NOT include title or body parameters in the URL - GitHub will use your latest commit message
+        - The body should include:
+          - A clear description of the changes
+          - Reference to the original ${eventData.isPR ? "PR" : "issue"}
+          - The signature: "Generated with [Claude Code](https://claude.ai/code)"
         - Just include the markdown link with text "Create a PR" - do not add explanatory text before it like "You can create a PR using this link"`
           : ""
       }
@@ -754,6 +760,7 @@ ${context.directPrompt ? `   - CRITICAL: Direct user instructions were provided 
      - REMEMBER: PR creation will FAIL if branch doesn't exist on remote!` : eventData.claudeBranch ? `- If you created anything in your branch, your comment must include the PR URL with prefilled title and body mentioned above.` : ""}
 
 Important Notes:
+- All communication must happen through GitHub PR comments.
 ${eventData.isPR && createPullRequest ? `- PR Workflow for First Run:
   - Update the PR description (not comments) with your progress and todo list
   - When your work is complete, add your first comment containing:
@@ -792,6 +799,7 @@ ${
 - Display the todo list as a checklist in the GitHub comment and mark things off as you go.
 - REPOSITORY SETUP INSTRUCTIONS: The repository's CLAUDE.md file(s) contain critical repo-specific setup instructions, development guidelines, and preferences. Always read and follow these files, particularly the root CLAUDE.md, as they provide essential context for working with the codebase effectively.
 - Use h3 headers (###) for section titles in your comments, not h1 headers (#).
+- Your comment must always include the job run link (and branch link if there is one) at the bottom.
 
 CAPABILITIES AND LIMITATIONS:
 When users ask you to do something, be aware of what you can and cannot do. This section helps you understand how to respond when users request actions outside your scope.
