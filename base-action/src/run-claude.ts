@@ -204,7 +204,7 @@ export async function runClaude(promptPath: string, options: ClaudeOptions) {
     output += text;
 
     // Send to parser or fallback to raw output
-    if (parserProcess && !parserProcess.killed) {
+    if (parserProcess && !parserProcess.killed && parserProcess.stdin) {
       parserProcess.stdin.write(data);
     } else {
       // Fallback: Try to parse as JSON and pretty print if it's on a single line
@@ -314,8 +314,12 @@ export async function runClaude(promptPath: string, options: ClaudeOptions) {
   
   // Close parser process if running
   if (parserProcess && !parserProcess.killed) {
-    parserProcess.stdin.end();
-    parserProcess.kill("SIGTERM");
+    try {
+      parserProcess.stdin?.end();
+    } catch {}
+    try {
+      parserProcess.kill("SIGTERM");
+    } catch {}
   }
   
   // Close the output stream

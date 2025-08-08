@@ -672,12 +672,28 @@ IMPORTANT CLARIFICATIONS:
 
 Follow these steps:
 
-1. Create a Todo List:
+ 1. ${((eventData.eventName === "issues") || (eventData.eventName === "issue_comment" && !eventData.isPR)) && createPullRequest
+      ? `Create a Draft Pull Request (then continue work in that PR):
+   - Ensure the branch exists on remote:
+     - If there are no changes yet, create an empty commit: Bash(git commit --allow-empty -m "chore: init draft PR")
+     - Push the branch: Bash(git push origin ${eventData.claudeBranch})
+   - Create a draft PR using mcp__github__create_pull_request with:
+     - base: "${eventData.baseBranch}"
+     - head: "${eventData.claudeBranch}"
+     - title: short description of the task
+     - body: include "Addresses #${eventData.issueNumber}" and a job link: "[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
+     - draft: true
+   - Continue all work on this same branch; the PR will update automatically as you push commits.
+   - If PR creation fails, add this to your comment:
+     - "PR creation failed: <include the exact error message from the tool>"
+     - Then include a manual creation link: [Create a PR](${GITHUB_SERVER_URL}/${context.repository}/compare/${eventData.baseBranch}...${eventData.claudeBranch}?quick_pull=1)
+     - Do not include the manual link if PR creation succeeded.`
+      : `Create a Todo List:
    - Start your comment with the job run link: [View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})
    - If working on a branch, include the branch link below it: [View branch](${GITHUB_SERVER_URL}/${context.repository}/tree/<branch-name>)
    - Use your GitHub comment to maintain a detailed task list based on the request.
    - Format todos as a checklist (- [ ] for incomplete, - [x] for complete).
-   - Update the comment using mcp__github_comment__update_claude_comment with each task completion.
+   - Update the comment using mcp__github_comment__update_claude_comment with each task completion.`}
 
 3. Gather Context:
    - Analyze the pre-fetched data provided above.
@@ -716,39 +732,19 @@ ${context.directPrompt ? `   - CRITICAL: Direct user instructions were provided 
 
    B. For Straightforward Changes:
       ${((eventData.eventName === "issues") || (eventData.eventName === "issue_comment" && !eventData.isPR)) && createPullRequest 
-        ? `- IMPORTANT: If you haven't created the PR yet, STOP and create it first as described in step 1
-      - After creating the PR, you'll be notified that your work is complete for this issue
-      - All actual implementation work will happen when Claude is triggered on the PR itself`
+        ? `- You are working under a DRAFT pull request. As you commit and push to '${eventData.claudeBranch}', the PR updates automatically.
+      - If needed, update the PR title/body using mcp__github__update_pull_request.
+      - Do not mark the PR ready for review until all tasks are complete.`
         : `- Use file system tools to make the change locally.
       - If you discover related tasks (e.g., updating tests), add them to the todo list.
       - Mark each subtask as completed as you progress.${getCommitInstructions(eventData, githubData, context, useCommitSigning)}`}
       ${
-        eventData.claudeBranch && createPullRequest
-          ? `- CRITICAL: You MUST push all changes to the remote branch BEFORE attempting to create a pull request:
-        1. First, commit and push ALL your changes: Bash(git push origin ${eventData.claudeBranch})
-        2. Verify the push succeeded by checking the output
-        3. Only AFTER successfully pushing, create a pull request using the mcp__github__create_pull_request tool
-        - Set the base branch to '${eventData.baseBranch}' and the head branch to '${eventData.claudeBranch}'.
-        - Use a descriptive title that summarizes the changes.
-        - For the PR body: Use the FULL content of your current GitHub comment (excluding the job run link and branch link).
-        - If this is for an issue, reference it in the PR body (e.g., "Addresses #${eventData.issueNumber || 'ISSUE_NUMBER'}").
-        - REMEMBER: The PR will FAIL if you haven't pushed your changes first!`
-          : eventData.claudeBranch
-          ? `- Provide a URL to create a PR manually in this format:
-		[Create a PR](${GITHUB_SERVER_URL}/${context.repository}/compare/${eventData.baseBranch}...<branch-name>?quick_pull=1&title=<url-encoded-title>&body=<url
--encoded-body>)
-        - IMPORTANT: Use THREE dots (...) between branch names, not two (..)
-          Example: ${GITHUB_SERVER_URL}/${context.repository}/compare/main...feature-branch (correct)
-          NOT: ${GITHUB_SERVER_URL}/${context.repository}/compare/main..feature-branch (incorrect)
-		- IMPORTANT: Ensure all URL parameters are properly encoded - spaces should be encoded as %20, not left as spaces
-		  Example: Instead of "fix: update welcome message", use "fix%3A%20update%20welcome%20message"
-        - The target-branch should be '${eventData.baseBranch}'.
-        - The branch-name is the current branch: ${eventData.claudeBranch}
-        - The body should include:
-          - A clear description of the changes
-          - Reference to the original ${eventData.isPR ? "PR" : "issue"}
-          - The signature: "Generated with [Claude Code](https://claude.ai/code)"
-        - Just include the markdown link with text "Create a PR" - do not add explanatory text before it like "You can create a PR using this link"`
+        eventData.claudeBranch && createPullRequest && !eventData.isPR
+          ? `- Continue pushing commits to '${eventData.claudeBranch}'. The draft PR will reflect your progress.`
+          : eventData.claudeBranch && !createPullRequest
+          ? `- If automated PR creation failed above (include the error message), provide a manual link:
+        [Create a PR](${GITHUB_SERVER_URL}/${context.repository}/compare/${eventData.baseBranch}...${eventData.claudeBranch}?quick_pull=1)
+        - IMPORTANT: Use THREE dots (...) between branch names, not two (..)`
           : ""
       }
 
@@ -766,15 +762,7 @@ ${context.directPrompt ? `   - CRITICAL: Direct user instructions were provided 
    - When all todos are completed, remove the spinner and add a brief summary of what was accomplished, and what was not done.
    - Note: If you see previous Claude comments with headers like "**Claude finished @user's task**" followed by "---", do not include this in your comment. The system adds this automatically.
    - If you changed any files locally, you must update them in the remote branch via ${useCommitSigning ? "mcp__github_file_ops__commit_files" : "git commands (add, commit, push)"} before saying that you're done.
-   ${eventData.claudeBranch && createPullRequest ? `- CRITICAL PR CREATION SEQUENCE:
-     1. FIRST: Ensure ALL changes are committed: Bash(git add -A && git commit -m "your message")
-     2. SECOND: Push ALL commits to remote: Bash(git push origin ${eventData.claudeBranch})
-     3. THIRD: Verify push succeeded (check for success message in git push output)
-     4. ONLY THEN: Create pull request using mcp__github__create_pull_request
-     - Include the FULL content of your current GitHub comment (excluding job/branch links) as the PR body
-     - Update your issue comment to ADD the PR link AT THE TOP: "Pull Request: #[PR_NUMBER]\\n\\n[rest of your existing comment]"
-     - Do NOT include a "Create a PR" link after PR is created
-     - REMEMBER: PR creation will FAIL if branch doesn't exist on remote!` : eventData.claudeBranch ? `- If you created anything in your branch, your comment must include the PR URL with prefilled title and body mentioned above.` : ""}
+   ${createPullRequest ? `- If a draft PR exists and work is complete, mark it ready for review using mcp__github__update_pull_request with { draft: false }.` : eventData.claudeBranch ? `- If you created anything in your branch, your comment must include the PR URL with prefilled title and body mentioned above.` : ""}
 
 Important Notes:
 - All communication must happen through GitHub PR comments.
