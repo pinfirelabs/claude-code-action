@@ -677,13 +677,16 @@ Follow these steps:
    - Ensure the branch exists on remote:
      - If there are no changes yet, create an empty commit: Bash(git commit --allow-empty -m "chore: init draft PR")
      - Push the branch: Bash(git push origin ${eventData.claudeBranch})
+   - Fetch the source issue details using mcp__github__get_issue to retrieve labels, milestone, and projects.
    - Create a draft PR using mcp__github__create_pull_request with:
      - base: "${eventData.baseBranch}"
      - head: "${eventData.claudeBranch}"
-     - title: short description of the task
+     - title: short description of the task (include: "Fixes #${eventData.issueNumber}")
      - body: include "Addresses #${eventData.issueNumber}" and a job link: "[View job run](${GITHUB_SERVER_URL}/${context.repository}/actions/runs/${runId})"
      - draft: true
+     - metadata: apply the SAME labels, milestone, and projects as the source issue (pass these if supported by the tool; otherwise, immediately call mcp__github__update_pull_request to set them)
    - Continue all work on this same branch; the PR will update automatically as you push commits.
+   - Ensure PR metadata stays in sync with the issue: labels, milestone, and projects should match the source issue (use mcp__github__update_pull_request if adjustments are needed).
    - If PR creation fails, add this to your comment:
      - "PR creation failed: <include the exact error message from the tool>"
      - Then include a manual creation link: [Create a PR](${GITHUB_SERVER_URL}/${context.repository}/compare/${eventData.baseBranch}...${eventData.claudeBranch}?quick_pull=1)
