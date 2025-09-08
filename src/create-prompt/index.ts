@@ -875,7 +875,7 @@ export async function createPrompt(
       modeContext.claudeBranch,
     );
 
-    await mkdir(`${process.env.RUNNER_TEMP}/claude-prompts`, {
+    await mkdir(`${process.env.RUNNER_TEMP || "/tmp"}/claude-prompts`, {
       recursive: true,
     });
 
@@ -894,7 +894,7 @@ export async function createPrompt(
 
     // Write the prompt file
     await writeFile(
-      `${process.env.RUNNER_TEMP}/claude-prompts/claude-prompt.txt`,
+      `${process.env.RUNNER_TEMP || "/tmp"}/claude-prompts/claude-prompt.txt`,
       promptContent,
     );
 

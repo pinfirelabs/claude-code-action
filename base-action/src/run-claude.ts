@@ -110,6 +110,10 @@ export function prepareRunConfig(
   // Parse custom environment variables
   const customEnv = parseCustomEnvVars(options.claudeEnv);
 
+  if (process.env.INPUT_ACTION_INPUTS_PRESENT) {
+    customEnv.GITHUB_ACTION_INPUTS = process.env.INPUT_ACTION_INPUTS_PRESENT;
+  }
+
   return {
     claudeArgs,
     promptPath,
@@ -142,9 +146,11 @@ export async function runClaude(promptPath: string, options: ClaudeOptions) {
   console.log(`Prompt file size: ${promptSize} bytes`);
 
   // Log custom environment variables if any
-  if (Object.keys(config.env).length > 0) {
-    const envKeys = Object.keys(config.env).join(", ");
-    console.log(`Custom environment variables: ${envKeys}`);
+  const customEnvKeys = Object.keys(config.env).filter(
+    (key) => key !== "CLAUDE_ACTION_INPUTS_PRESENT",
+  );
+  if (customEnvKeys.length > 0) {
+    console.log(`Custom environment variables: ${customEnvKeys.join(", ")}`);
   }
 
   // Output to console
@@ -336,11 +342,13 @@ export async function runClaude(promptPath: string, options: ClaudeOptions) {
   if (exitCode === 0) {
     // Try to process the output and save execution metrics
     try {
-      // Wait a moment for stream to finish writing
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Process the stream file into proper JSON array
-      const { stdout: jsonOutput } = await execAsync(`jq -s '.' "${EXECUTION_FILE}.stream"`);
+      await writeFile("output.txt", output);
+
+      // Process output.txt into JSON and save to execution file
+      // Increase maxBuffer from Node.js default of 1MB to 10MB to handle large Claude outputs
+      const { stdout: jsonOutput } = await execAsync("jq -s '.' output.txt", {
+        maxBuffer: 10 * 1024 * 1024,
+      });
       await writeFile(EXECUTION_FILE, jsonOutput);
       
       // Clean up the stream file
@@ -369,10 +377,11 @@ export async function runClaude(promptPath: string, options: ClaudeOptions) {
     // Still try to save execution file if we have output
     if (output) {
       try {
-        // Wait a moment for stream to finish writing
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        const { stdout: jsonOutput } = await execAsync(`jq -s '.' "${EXECUTION_FILE}.stream"`);
+        await writeFile("output.txt", output);
+        // Increase maxBuffer from Node.js default of 1MB to 10MB to handle large Claude outputs
+        const { stdout: jsonOutput } = await execAsync("jq -s '.' output.txt", {
+          maxBuffer: 10 * 1024 * 1024,
+        });
         await writeFile(EXECUTION_FILE, jsonOutput);
         
         // Clean up the stream file

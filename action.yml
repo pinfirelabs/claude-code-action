@@ -180,6 +180,7 @@ runs:
         DEFAULT_WORKFLOW_TOKEN: ${{ github.token }}
         ADDITIONAL_PERMISSIONS: ${{ inputs.additional_permissions }}
         USE_COMMIT_SIGNING: ${{ inputs.use_commit_signing }}
+        ALL_INPUTS: ${{ toJson(inputs) }}
 
     - name: Install Base Action Dependencies
       if: steps.prepare.outputs.contains_trigger == 'true'
@@ -191,7 +192,8 @@ runs:
         echo "Base-action dependencies installed"
         cd -
         # Install Claude Code globally
-        bun install -g @anthropic-ai/claude-code@1.0.72
+        curl -fsSL https://claude.ai/install.sh | bash -s 1.0.88
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
         # Install claude-stream-parser for live output formatting
         echo "Installing claude-stream-parser..."
@@ -235,6 +237,7 @@ runs:
         INPUT_CLAUDE_ENV: ${{ inputs.claude_env }}
         INPUT_FALLBACK_MODEL: ${{ inputs.fallback_model }}
         INPUT_EXPERIMENTAL_SLASH_COMMANDS_DIR: ${{ github.action_path }}/slash-commands
+        INPUT_ACTION_INPUTS_PRESENT: ${{ steps.prepare.outputs.action_inputs_present }}
 
         # Model configuration
         ANTHROPIC_MODEL: ${{ inputs.model || inputs.anthropic_model }}
@@ -320,7 +323,7 @@ runs:
         fi
 
     - name: Revoke app token
-      if: always() && inputs.github_token == ''
+      if: always() && inputs.github_token == '' && steps.prepare.outputs.skipped_due_to_workflow_validation_mismatch != 'true'
       shell: bash
       run: |
         curl -L \
