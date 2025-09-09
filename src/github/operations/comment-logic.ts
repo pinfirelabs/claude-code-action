@@ -175,7 +175,13 @@ export function updateCommentBody(input: CommentUpdateInput): string {
   const prUrl =
     prLinkFromContent || (prLink ? prLink.match(/\(([^)]+)\)/)?.[1] : "");
   if (prUrl) {
-    links += ` • [Create PR ➔](${prUrl})`;
+    // Extract the link text from prLink if it's a full markdown link
+    const prLinkText = prLink ? prLink.match(/\[([^\]]+)\]/)?.[1] : null;
+    if (prLinkText) {
+      links += ` • [${prLinkText}](${prUrl})`;
+    } else {
+      links += ` • [Create PR ➔](${prUrl})`;
+    }
   }
 
   // Build the new body with blank line between header and separator

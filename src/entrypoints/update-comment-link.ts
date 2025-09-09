@@ -128,20 +128,44 @@ async function run() {
               basehead: `${baseBranch}...${claudeBranch}`,
             });
 
-          // If there are changes (commits or file changes), add the PR URL
+          // If there are changes (commits or file changes), check for existing PR or create PR link
           if (
             comparison.total_commits > 0 ||
             (comparison.files && comparison.files.length > 0)
           ) {
-            const entityType = context.isPR ? "PR" : "Issue";
-            const prTitle = encodeURIComponent(
-              `${entityType} #${context.entityNumber}: Changes from Claude`,
-            );
-            const prBody = encodeURIComponent(
-              `This PR addresses ${entityType.toLowerCase()} #${context.entityNumber}\n\nGenerated with [Claude Code](https://claude.ai/code)`,
-            );
-            const prUrl = `${serverUrl}/${owner}/${repo}/compare/${baseBranch}...${claudeBranch}?quick_pull=1&title=${prTitle}&body=${prBody}`;
-            prLink = `\n[Create a PR](${prUrl})`;
+            // First, check if there's already a PR for this branch
+            let existingPR = null;
+            try {
+              const { data: prs } = await octokit.rest.pulls.list({
+                owner,
+                repo,
+                head: `${owner}:${claudeBranch}`,
+                state: "open",
+              });
+              
+              if (prs.length > 0) {
+                existingPR = prs[0]; // Use the first (most recent) PR for this branch
+              }
+            } catch (error) {
+              console.error("Error checking for existing PR:", error);
+              // Continue with creating the PR link even if we can't check for existing PRs
+            }
+
+            if (existingPR) {
+              // Show link to existing PR
+              prLink = `\n[PR #${existingPR.number}](${existingPR.html_url})`;
+            } else {
+              // Show create PR link as before
+              const entityType = context.isPR ? "PR" : "Issue";
+              const prTitle = encodeURIComponent(
+                `${entityType} #${context.entityNumber}: Changes from Claude`,
+              );
+              const prBody = encodeURIComponent(
+                `This PR addresses ${entityType.toLowerCase()} #${context.entityNumber}\n\nGenerated with [Claude Code](https://claude.ai/code)`,
+              );
+              const prUrl = `${serverUrl}/${owner}/${repo}/compare/${baseBranch}...${claudeBranch}?quick_pull=1&title=${prTitle}&body=${prBody}`;
+              prLink = `\n[Create PR ➔](${prUrl})`;
+            }
           }
         } catch (error) {
           console.error("Error checking for changes in branch:", error);
