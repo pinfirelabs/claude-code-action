@@ -25,18 +25,22 @@ export async function createInitialComment(
   const jobRunLink = createJobRunLink(owner, repo, context.runId);
   const initialBody = createCommentBody(jobRunLink);
 
+  // Determine target entity - use pr_number if specified, otherwise use current entity
+  const targetEntityNumber = context.inputs.prNumber || context.entityNumber;
+  const targetIsPR = context.inputs.prNumber ? true : context.isPR;
+
   try {
     let response;
 
     if (
       context.inputs.useStickyComment &&
-      context.isPR &&
-      isPullRequestEvent(context)
+      targetIsPR &&
+      (isPullRequestEvent(context) || context.inputs.prNumber)
     ) {
       const comments = await octokit.rest.issues.listComments({
         owner,
         repo,
-        issue_number: context.entityNumber,
+        issue_number: targetEntityNumber,
       });
       const existingComment = comments.data.find((comment) => {
         const idMatch = comment.user?.id === CLAUDE_APP_BOT_ID;
@@ -59,16 +63,19 @@ export async function createInitialComment(
         response = await octokit.rest.issues.createComment({
           owner,
           repo,
-          issue_number: context.entityNumber,
+          issue_number: targetEntityNumber,
           body: initialBody,
         });
       }
-    } else if (isPullRequestReviewCommentEvent(context)) {
-      // Only use createReplyForReviewComment if it's a PR review comment AND we have a comment_id
+    } else if (
+      isPullRequestReviewCommentEvent(context) &&
+      !context.inputs.prNumber
+    ) {
+      // Only use createReplyForReviewComment if it's a PR review comment AND not working within a specified PR
       response = await octokit.rest.pulls.createReplyForReviewComment({
         owner,
         repo,
-        pull_number: context.entityNumber,
+        pull_number: targetEntityNumber,
         comment_id: context.payload.comment.id,
         body: initialBody,
       });
@@ -77,7 +84,7 @@ export async function createInitialComment(
       response = await octokit.rest.issues.createComment({
         owner,
         repo,
-        issue_number: context.entityNumber,
+        issue_number: targetEntityNumber,
         body: initialBody,
       });
     }
@@ -95,7 +102,7 @@ export async function createInitialComment(
       const response = await octokit.rest.issues.createComment({
         owner,
         repo,
-        issue_number: context.entityNumber,
+        issue_number: targetEntityNumber,
         body: initialBody,
       });
 

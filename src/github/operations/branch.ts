@@ -26,8 +26,54 @@ export async function setupBranch(
 ): Promise<BranchInfo> {
   const { owner, repo } = context.repository;
   const entityNumber = context.entityNumber;
-  const { baseBranch, branchPrefix } = context.inputs;
+  const { baseBranch, branchPrefix, prNumber, branchCheckedOut } = context.inputs;
   const isPR = context.isPR;
+
+  // Skip all checkout operations if branch is already checked out
+  if (branchCheckedOut) {
+    console.log("Branch already checked out, using current working directory state");
+
+    // Get current branch name
+    const currentBranchResult = await $`git rev-parse --abbrev-ref HEAD`.quiet();
+    const currentBranch = currentBranchResult.stdout.trim();
+
+    // Determine base branch (fallback to default if not specified)
+    let determinedBaseBranch: string;
+    if (baseBranch) {
+      determinedBaseBranch = baseBranch;
+    } else {
+      const repoResponse = await octokits.rest.repos.get({ owner, repo });
+      determinedBaseBranch = repoResponse.data.default_branch;
+    }
+
+    return {
+      baseBranch: determinedBaseBranch,
+      currentBranch,
+    };
+  }
+
+  // Handle pr_number case - checkout the specified PR's branch
+  if (prNumber) {
+    console.log(`Working within existing PR #${prNumber}, fetching PR data...`);
+    const { data: prData } = await octokits.rest.pulls.get({
+      owner,
+      repo,
+      pull_number: prNumber,
+    });
+
+    console.log(`Checking out branch for PR #${prNumber}: ${prData.head.ref}`);
+
+    // Fetch and checkout the PR branch
+    await $`git fetch origin ${prData.head.ref} --depth=50`;
+    await $`git checkout ${prData.head.ref}`;
+
+    console.log(`Successfully checked out PR #${prNumber} branch`);
+
+    return {
+      baseBranch: prData.base.ref,
+      currentBranch: prData.head.ref,
+    };
+  }
 
   if (isPR) {
     const prData = githubData.contextData as GitHubPullRequest;

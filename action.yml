@@ -31,6 +31,13 @@ inputs:
     description: "Comma-separated list of usernames to allow without write permissions, or '*' to allow all users. Only works when github_token input is provided. WARNING: Use with extreme caution - this bypasses security checks and should only be used for workflows with very limited permissions (e.g., issue labeling)."
     required: false
     default: ""
+  pr_number:
+    description: "Work within an existing pull request instead of creating a new branch. When specified, Claude will route comments to this PR and optionally work within its branch."
+    required: false
+  branch_checked_out:
+    description: "Skip checkout operations and use the current working directory state. Useful when you've already checked out the code with specific options."
+    required: false
+    default: "false"
 
   # Claude Code configuration
   prompt:
@@ -153,6 +160,8 @@ runs:
         OVERRIDE_GITHUB_TOKEN: ${{ inputs.github_token }}
         ALLOWED_BOTS: ${{ inputs.allowed_bots }}
         ALLOWED_NON_WRITE_USERS: ${{ inputs.allowed_non_write_users }}
+        PR_NUMBER: ${{ inputs.pr_number }}
+        BRANCH_CHECKED_OUT: ${{ inputs.branch_checked_out }}
         GITHUB_RUN_ID: ${{ github.run_id }}
         USE_STICKY_COMMENT: ${{ inputs.use_sticky_comment }}
         DEFAULT_WORKFLOW_TOKEN: ${{ github.token }}

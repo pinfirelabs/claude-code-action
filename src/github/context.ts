@@ -95,6 +95,8 @@ type BaseContext = {
     allowedBots: string;
     allowedNonWriteUsers: string;
     trackProgress: boolean;
+    prNumber?: number;
+    branchCheckedOut: boolean;
   };
 };
 
@@ -150,6 +152,10 @@ export function parseGitHubContext(): GitHubContext {
       allowedBots: process.env.ALLOWED_BOTS ?? "",
       allowedNonWriteUsers: process.env.ALLOWED_NON_WRITE_USERS ?? "",
       trackProgress: process.env.TRACK_PROGRESS === "true",
+      prNumber: process.env.PR_NUMBER
+        ? parseInt(process.env.PR_NUMBER, 10)
+        : undefined,
+      branchCheckedOut: process.env.BRANCH_CHECKED_OUT === "true",
     },
   };
 

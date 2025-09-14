@@ -110,7 +110,8 @@ async function run() {
     // Check if we need to add PR URL when we have a new branch
     let prLink = "";
     // If claudeBranch is set, it means we created a new branch (for issues or closed/merged PRs)
-    if (claudeBranch && !shouldDeleteBranch) {
+    // Skip PR link creation if we're working within an existing PR
+    if (claudeBranch && !shouldDeleteBranch && !context.inputs.prNumber) {
       // Check if comment already contains a PR URL
       const serverUrlPattern = serverUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const prUrlPattern = new RegExp(
