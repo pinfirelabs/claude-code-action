@@ -39,7 +39,7 @@ export async function setupBranch(
     // Get current branch name
     const currentBranchResult =
       await $`git rev-parse --abbrev-ref HEAD`.quiet();
-    const currentBranch = currentBranchResult.stdout.trim();
+    const currentBranch = currentBranchResult.stdout.toString().trim();
 
     // Determine base branch (fallback to default if not specified)
     let determinedBaseBranch: string;
