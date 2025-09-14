@@ -138,34 +138,62 @@ export async function runClaude(promptPath: string, options: ClaudeOptions) {
     pipeStream.destroy();
   });
 
+  // Create a write stream for the raw JSON output file
+  const outputStream = createWriteStream(EXECUTION_FILE + ".stream");
+
+  // Spawn claude-stream-parser for live output formatting
+  let parserProcess: ReturnType<typeof spawn> | null = null;
+  try {
+    parserProcess = spawn("claude-stream-parser", [], {
+      stdio: ["pipe", "inherit", "inherit"],
+    });
+
+    parserProcess.on("error", (error) => {
+      console.error(
+        "Warning: claude-stream-parser not available, falling back to raw output:",
+        error.message,
+      );
+      parserProcess = null;
+    });
+  } catch (e) {
+    console.log("claude-stream-parser not available, showing raw JSON output");
+  }
+
   // Capture output for parsing execution metrics
   let output = "";
   claudeProcess.stdout.on("data", (data) => {
     const text = data.toString();
 
-    // Try to parse as JSON and pretty print if it's on a single line
-    const lines = text.split("\n");
-    lines.forEach((line: string, index: number) => {
-      if (line.trim() === "") return;
-
-      try {
-        // Check if this line is a JSON object
-        const parsed = JSON.parse(line);
-        const prettyJson = JSON.stringify(parsed, null, 2);
-        process.stdout.write(prettyJson);
-        if (index < lines.length - 1 || text.endsWith("\n")) {
-          process.stdout.write("\n");
-        }
-      } catch (e) {
-        // Not a JSON object, print as is
-        process.stdout.write(line);
-        if (index < lines.length - 1 || text.endsWith("\n")) {
-          process.stdout.write("\n");
-        }
-      }
-    });
-
+    // Always save raw output to file
+    outputStream.write(data);
     output += text;
+
+    // Send to parser or fallback to raw output
+    if (parserProcess && !parserProcess.killed && parserProcess.stdin) {
+      parserProcess.stdin.write(data);
+    } else {
+      // Fallback: Try to parse as JSON and pretty print if it's on a single line
+      const lines = text.split("\n");
+      lines.forEach((line: string, index: number) => {
+        if (line.trim() === "") return;
+
+        try {
+          // Check if this line is a JSON object
+          const parsed = JSON.parse(line);
+          const prettyJson = JSON.stringify(parsed, null, 2);
+          process.stdout.write(prettyJson);
+          if (index < lines.length - 1 || text.endsWith("\n")) {
+            process.stdout.write("\n");
+          }
+        } catch (e) {
+          // Not a JSON object, print as is
+          process.stdout.write(line);
+          if (index < lines.length - 1 || text.endsWith("\n")) {
+            process.stdout.write("\n");
+          }
+        }
+      });
+    }
   });
 
   // Handle stdout errors
@@ -207,6 +235,19 @@ export async function runClaude(promptPath: string, options: ClaudeOptions) {
     // Process may already be dead
   }
 
+  // Close parser process if running
+  if (parserProcess && !parserProcess.killed) {
+    try {
+      parserProcess.stdin?.end();
+    } catch {}
+    try {
+      parserProcess.kill("SIGTERM");
+    } catch {}
+  }
+
+  // Close the output stream
+  outputStream.end();
+
   // Clean up pipe file
   try {
     await unlink(PIPE_PATH);
@@ -218,18 +259,34 @@ export async function runClaude(promptPath: string, options: ClaudeOptions) {
   if (exitCode === 0) {
     // Try to process the output and save execution metrics
     try {
-      await writeFile("output.txt", output);
+      // Wait a moment for stream to finish writing
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Process output.txt into JSON and save to execution file
-      // Increase maxBuffer from Node.js default of 1MB to 10MB to handle large Claude outputs
-      const { stdout: jsonOutput } = await execAsync("jq -s '.' output.txt", {
-        maxBuffer: 10 * 1024 * 1024,
-      });
+      // Process the stream file into proper JSON array
+      const { stdout: jsonOutput } = await execAsync(
+        `jq -s '.' "${EXECUTION_FILE}.stream"`,
+        {
+          maxBuffer: 10 * 1024 * 1024,
+        },
+      );
       await writeFile(EXECUTION_FILE, jsonOutput);
+
+      // Clean up the stream file
+      try {
+        await unlink(EXECUTION_FILE + ".stream");
+      } catch (e) {
+        // Ignore cleanup errors
+      }
 
       console.log(`Log saved to ${EXECUTION_FILE}`);
     } catch (e) {
       core.warning(`Failed to process output for execution metrics: ${e}`);
+      // Fallback: rename stream file if jq processing failed
+      try {
+        await execAsync(`mv "${EXECUTION_FILE}.stream" "${EXECUTION_FILE}"`);
+      } catch (e2) {
+        // Even fallback failed
+      }
     }
 
     core.setOutput("conclusion", "success");
@@ -240,15 +297,33 @@ export async function runClaude(promptPath: string, options: ClaudeOptions) {
     // Still try to save execution file if we have output
     if (output) {
       try {
-        await writeFile("output.txt", output);
-        // Increase maxBuffer from Node.js default of 1MB to 10MB to handle large Claude outputs
-        const { stdout: jsonOutput } = await execAsync("jq -s '.' output.txt", {
-          maxBuffer: 10 * 1024 * 1024,
-        });
+        // Wait a moment for stream to finish writing
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        const { stdout: jsonOutput } = await execAsync(
+          `jq -s '.' "${EXECUTION_FILE}.stream"`,
+          {
+            maxBuffer: 10 * 1024 * 1024,
+          },
+        );
         await writeFile(EXECUTION_FILE, jsonOutput);
+
+        // Clean up the stream file
+        try {
+          await unlink(EXECUTION_FILE + ".stream");
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+
         core.setOutput("execution_file", EXECUTION_FILE);
       } catch (e) {
-        // Ignore errors when processing output during failure
+        // Try fallback
+        try {
+          await execAsync(`mv "${EXECUTION_FILE}.stream" "${EXECUTION_FILE}"`);
+          core.setOutput("execution_file", EXECUTION_FILE);
+        } catch (e2) {
+          // Even fallback failed
+        }
       }
     }
 

@@ -13,28 +13,29 @@ The biggest change is migrating from individual configuration inputs to the mode
 
 ### Input Migration Table
 
-| Old Pinfire Input | New Format | Example |
-|-------------------|------------|---------|
-| `allowed_tools: "Read,Write"` | `claude_args: "--allowedTools Read,Write"` | ✅ Direct conversion |
-| `disallowed_tools: "WebSearch"` | `claude_args: "--disallowedTools WebSearch"` | ✅ Direct conversion |
+| Old Pinfire Input                   | New Format                                    | Example                |
+| ----------------------------------- | --------------------------------------------- | ---------------------- |
+| `allowed_tools: "Read,Write"`       | `claude_args: "--allowedTools Read,Write"`    | ✅ Direct conversion   |
+| `disallowed_tools: "WebSearch"`     | `claude_args: "--disallowedTools WebSearch"`  | ✅ Direct conversion   |
 | `custom_instructions: "Be helpful"` | `claude_args: "--system-prompt 'Be helpful'"` | ⚠️ Option name changed |
-| `max_turns: "10"` | `claude_args: "--max-turns 10"` | ✅ Direct conversion |
-| `model: "claude-3-5-sonnet"` | `claude_args: "--model claude-3-5-sonnet"` | ✅ Direct conversion |
-| `anthropic_model: "..."` | `claude_args: "--model ..."` | ✅ Use `model` instead |
-| `fallback_model: "..."` | `claude_args: "--fallback-model ..."` | ✅ Direct conversion |
-| `timeout_minutes: "30"` | Use job-level `timeout-minutes: 30` | ⚠️ Move to job level |
-| `direct_prompt: "Do this"` | `prompt: "Do this"` | ✅ Renamed input |
-| `override_prompt: "..."` | `prompt: "..."` | ✅ Use `prompt` |
-| `claude_env: "NODE_ENV=test"` | `settings: '{"env": {"NODE_ENV": "test"}}'` | ⚠️ JSON format |
-| `mcp_config: '{...}'` | `claude_args: "--mcp-config '{...}'"` | ✅ Direct conversion |
-| `mode: "agent"` | Auto-detected (remove input) | ✅ No longer needed |
-| `create_pull_request: "true"` | Use GitHub MCP tools in `claude_args` | ⚠️ See below |
-| `use_timestamp_suffix: "false"` | Removed (always enabled now) | ❌ Feature removed |
-| `base_branch_prompt: "..."` | Use `pr_number` instead | ❌ Feature replaced |
+| `max_turns: "10"`                   | `claude_args: "--max-turns 10"`               | ✅ Direct conversion   |
+| `model: "claude-3-5-sonnet"`        | `claude_args: "--model claude-3-5-sonnet"`    | ✅ Direct conversion   |
+| `anthropic_model: "..."`            | `claude_args: "--model ..."`                  | ✅ Use `model` instead |
+| `fallback_model: "..."`             | `claude_args: "--fallback-model ..."`         | ✅ Direct conversion   |
+| `timeout_minutes: "30"`             | Use job-level `timeout-minutes: 30`           | ⚠️ Move to job level   |
+| `direct_prompt: "Do this"`          | `prompt: "Do this"`                           | ✅ Renamed input       |
+| `override_prompt: "..."`            | `prompt: "..."`                               | ✅ Use `prompt`        |
+| `claude_env: "NODE_ENV=test"`       | `settings: '{"env": {"NODE_ENV": "test"}}'`   | ⚠️ JSON format         |
+| `mcp_config: '{...}'`               | `claude_args: "--mcp-config '{...}'"`         | ✅ Direct conversion   |
+| `mode: "agent"`                     | Auto-detected (remove input)                  | ✅ No longer needed    |
+| `create_pull_request: "true"`       | Use GitHub MCP tools in `claude_args`         | ⚠️ See below           |
+| `use_timestamp_suffix: "false"`     | Removed (always enabled now)                  | ❌ Feature removed     |
+| `base_branch_prompt: "..."`         | Use `pr_number` instead                       | ❌ Feature replaced    |
 
 ## 🆕 New Features (Only 2 Added)
 
 ### 1. **`pr_number`** - Work Within Existing Pull Requests
+
 ```yaml
 # NEW: Route comments to specific PR and work within its branch
 - uses: your-org/claude-code-action@new-branch
@@ -45,11 +46,13 @@ The biggest change is migrating from individual configuration inputs to the mode
 ```
 
 **What it does:**
+
 - Routes Claude's comments to the specified PR
 - Checks out the PR's branch for code changes
 - Skips creating "Create PR" links (since already in a PR)
 
 ### 2. **`branch_checked_out`** - Use Pre-Checked-Out Code
+
 ```yaml
 jobs:
   analyze:
@@ -69,6 +72,7 @@ jobs:
 ```
 
 **What it does:**
+
 - Skips all git checkout operations
 - Uses whatever code is currently in the workspace
 - Enables custom checkout workflows
@@ -78,6 +82,7 @@ jobs:
 ### Basic Interactive Usage
 
 **Before (Pinfire):**
+
 ```yaml
 - uses: your-org/claude-code-action@pinfire
   with:
@@ -93,6 +98,7 @@ jobs:
 ```
 
 **After (New):**
+
 ```yaml
 - uses: your-org/claude-code-action@new-branch
   with:
@@ -106,6 +112,7 @@ jobs:
 ### Automation Workflow
 
 **Before (Pinfire):**
+
 ```yaml
 - uses: your-org/claude-code-action@pinfire
   with:
@@ -116,6 +123,7 @@ jobs:
 ```
 
 **After (New):**
+
 ```yaml
 - uses: your-org/claude-code-action@new-branch
   with:
@@ -132,6 +140,7 @@ jobs:
 ### NEW: Working Within Existing PR
 
 **Pinfire couldn't do this - NEW capability:**
+
 ```yaml
 on:
   issue_comment:
@@ -156,6 +165,7 @@ jobs:
 ### NEW: Custom Checkout Workflow
 
 **Pinfire couldn't do this - NEW capability:**
+
 ```yaml
 jobs:
   analyze:
@@ -182,6 +192,7 @@ jobs:
 ### Environment Variables
 
 **Before (Pinfire):**
+
 ```yaml
 - uses: your-org/claude-code-action@pinfire
   with:
@@ -191,6 +202,7 @@ jobs:
 ```
 
 **After (New):**
+
 ```yaml
 - uses: your-org/claude-code-action@new-branch
   with:
@@ -206,6 +218,7 @@ jobs:
 ### MCP Configuration
 
 **Before (Pinfire):**
+
 ```yaml
 - uses: your-org/claude-code-action@pinfire
   with:
@@ -221,6 +234,7 @@ jobs:
 ```
 
 **After (New):**
+
 ```yaml
 - uses: your-org/claude-code-action@new-branch
   with:
@@ -231,6 +245,7 @@ jobs:
 ### Timeout Configuration
 
 **Before (Pinfire):**
+
 ```yaml
 - uses: your-org/claude-code-action@pinfire
   with:
@@ -238,10 +253,11 @@ jobs:
 ```
 
 **After (New):**
+
 ```yaml
 jobs:
   claude-task:
-    timeout-minutes: 45  # Moved to job level
+    timeout-minutes: 45 # Moved to job level
     steps:
       - uses: your-org/claude-code-action@new-branch
 ```
@@ -249,21 +265,25 @@ jobs:
 ## ⚡ Features You Gain (From Upstream v1.0)
 
 ### 1. **Modern `claude_args` Format**
+
 - Direct access to all Claude Code CLI features
 - Future-proof as CLI evolves
 - Better documentation alignment
 
 ### 2. **Automatic Mode Detection**
+
 - No more manual `mode` configuration
 - Smarter behavior based on context
 
 ### 3. **Security Improvements**
+
 ```yaml
 # NEW: Allow non-write users (use carefully!)
 allowed_non_write_users: "trusted-user1,trusted-user2"
 ```
 
 ### 4. **Progress Tracking**
+
 ```yaml
 # NEW: Force tracking comments in automation mode
 track_progress: true
@@ -271,6 +291,7 @@ prompt: "Review this PR"
 ```
 
 ### 5. **Custom Executables**
+
 ```yaml
 # NEW: Use custom Claude Code or Bun versions
 path_to_claude_code_executable: "/custom/path/claude-code"
@@ -278,6 +299,7 @@ path_to_bun_executable: "/custom/path/bun"
 ```
 
 ### 6. **Better Bot Configuration**
+
 ```yaml
 # NEW: Customize bot identity
 bot_id: "your-bot-id"
@@ -287,16 +309,20 @@ bot_name: "your-bot-name"
 ## ❌ Features Removed
 
 ### 1. **`use_timestamp_suffix`**
+
 - **Reason**: Timestamp suffixes are now always used for better branch naming
 - **Migration**: Remove the input, behavior is now standard
 
 ### 2. **`base_branch_prompt`**
+
 - **Reason**: Replaced by more powerful `pr_number` workflow
 - **Migration**: Use `pr_number` to work within existing PRs instead
 
 ### 3. **`create_pull_request`**
+
 - **Reason**: GitHub MCP tools provide more flexible PR operations
 - **Migration**: Use `claude_args` with GitHub MCP tools:
+
 ```yaml
 claude_args: |
   --allowedTools mcp__github__create_pull_request,mcp__github__push_files
@@ -305,9 +331,11 @@ claude_args: |
 ## 🔧 Step-by-Step Migration Checklist
 
 ### Phase 1: Update Action Reference
+
 - [ ] Change `uses:` from `@pinfire` to `@new-branch`
 
 ### Phase 2: Input Migration
+
 - [ ] Remove `mode` input (auto-detected now)
 - [ ] Replace `direct_prompt` with `prompt`
 - [ ] Replace `override_prompt` with `prompt`
@@ -318,12 +346,14 @@ claude_args: |
 - [ ] Remove `base_branch_prompt` (use `pr_number` instead)
 
 ### Phase 3: Use New Features (Optional)
+
 - [ ] Add `pr_number` for PR-specific workflows
 - [ ] Add `branch_checked_out` for custom checkout needs
 - [ ] Consider `track_progress: true` for automation visibility
 - [ ] Use `allowed_non_write_users` if needed (security risk)
 
 ### Phase 4: Test & Validate
+
 - [ ] Test basic @claude mentions still work
 - [ ] Test automation workflows with `prompt`
 - [ ] Verify `claude_args` configuration works
@@ -338,6 +368,7 @@ claude_args: |
 ## 🆘 Common Migration Issues
 
 ### Issue: "Tool not found" errors
+
 ```yaml
 # ❌ Old way
 allowed_tools: "CustomTool"
@@ -347,6 +378,7 @@ claude_args: "--allowedTools CustomTool"
 ```
 
 ### Issue: Complex MCP config breaks
+
 ```yaml
 # ❌ Problematic
 claude_args: --mcp-config {"complex": "json"}
@@ -356,6 +388,7 @@ claude_args: '--mcp-config "{\"complex\": \"json\"}"'
 ```
 
 ### Issue: Environment variables not working
+
 ```yaml
 # ❌ Old way
 claude_env: "VAR=value"

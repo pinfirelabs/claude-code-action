@@ -26,15 +26,19 @@ export async function setupBranch(
 ): Promise<BranchInfo> {
   const { owner, repo } = context.repository;
   const entityNumber = context.entityNumber;
-  const { baseBranch, branchPrefix, prNumber, branchCheckedOut } = context.inputs;
+  const { baseBranch, branchPrefix, prNumber, branchCheckedOut } =
+    context.inputs;
   const isPR = context.isPR;
 
   // Skip all checkout operations if branch is already checked out
   if (branchCheckedOut) {
-    console.log("Branch already checked out, using current working directory state");
+    console.log(
+      "Branch already checked out, using current working directory state",
+    );
 
     // Get current branch name
-    const currentBranchResult = await $`git rev-parse --abbrev-ref HEAD`.quiet();
+    const currentBranchResult =
+      await $`git rev-parse --abbrev-ref HEAD`.quiet();
     const currentBranch = currentBranchResult.stdout.trim();
 
     // Determine base branch (fallback to default if not specified)
