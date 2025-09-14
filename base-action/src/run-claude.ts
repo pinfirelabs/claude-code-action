@@ -255,6 +255,9 @@ export async function runClaude(promptPath: string, options: ClaudeOptions) {
     // Ignore errors during cleanup
   }
 
+  // Log exit code for debugging
+  console.log(`Claude process exited with code: ${exitCode}`);
+
   // Set conclusion based on exit code
   if (exitCode === 0) {
     // Try to process the output and save execution metrics
@@ -280,13 +283,20 @@ export async function runClaude(promptPath: string, options: ClaudeOptions) {
 
       console.log(`Log saved to ${EXECUTION_FILE}`);
     } catch (e) {
-      core.warning(`Failed to process output for execution metrics: ${e}`);
-      // Fallback: rename stream file if jq processing failed
+      console.error(`Failed to process output for execution metrics: ${e}`);
+      core.setOutput("conclusion", "failure");
+
+      // Try fallback: rename stream file if jq processing failed
       try {
         await execAsync(`mv "${EXECUTION_FILE}.stream" "${EXECUTION_FILE}"`);
+        core.setOutput("execution_file", EXECUTION_FILE);
+        console.log("Using raw stream file as fallback");
       } catch (e2) {
-        // Even fallback failed
+        console.error("Even fallback processing failed:", e2);
       }
+
+      // Exit with failure since we couldn't process the output properly
+      process.exit(1);
     }
 
     core.setOutput("conclusion", "success");
