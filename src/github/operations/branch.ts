@@ -50,8 +50,20 @@ export async function setupBranch(
       determinedBaseBranch = repoResponse.data.default_branch;
     }
 
+    // Generate claude branch name for tracking (even though we're not creating it)
+    const entityType = isPR ? "pr" : "issue";
+    const now = new Date();
+    const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+    const branchName = `${branchPrefix}${entityType}-${entityNumber}-${timestamp}`;
+    const claudeBranch = branchName.toLowerCase().substring(0, 50);
+
+    // Set outputs for GitHub Actions
+    core.setOutput("CLAUDE_BRANCH", claudeBranch);
+    core.setOutput("BASE_BRANCH", determinedBaseBranch);
+
     return {
       baseBranch: determinedBaseBranch,
+      claudeBranch: claudeBranch,
       currentBranch,
     };
   }
